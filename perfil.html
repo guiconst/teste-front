@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIFA 2026 Guide - Meu Perfil</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        :root {
+            --fifa-blue: #1a5c9e;
+            --fifa-red: #e31837;
+            --fifa-gold: #ffd700;
+            --canada-red: #d80621;
+            --usa-blue: #002664;
+            --mexico-green: #006847;
+        }
+        .bg-fifa-gradient {
+            background: linear-gradient(135deg, var(--fifa-blue) 0%, var(--fifa-red) 100%);
+        }
+        .stat-card {
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .stat-card:active {
+            transform: scale(0.98);
+        }
+        .avaliacao-item {
+            transition: all 0.2s;
+        }
+        .avaliacao-item:hover {
+            background: #f9fafb;
+            transform: translateX(4px);
+        }
+        .level-bar {
+            background: linear-gradient(90deg, var(--fifa-red) 0%, var(--fifa-gold) 100%);
+            height: 8px;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        .flag-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255,255,255,0.2);
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+        }
+        .trofeu-icon {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+        .pais-visited {
+            transition: all 0.2s;
+        }
+        .pais-visited:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- Barra Superior -->
+    <nav class="bg-fifa-gradient text-white sticky top-0 z-50 shadow-lg">
+        <div class="px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="ri-trophy-line text-2xl trofeu-icon"></i>
+                <div>
+                    <h1 class="font-bold text-lg">FIFA 2026 Guide</h1>
+                    <p class="text-[10px] opacity-90">🇨🇦 🇺🇸 🇲🇽</p>
+                </div>
+            </div>
+            <div id="auth-buttons">
+                <div class="flex items-center space-x-2 bg-white bg-opacity-20 rounded-full px-3 py-1">
+                    <i class="ri-user-smile-line"></i>
+                    <span class="text-sm font-semibold" id="user-name-display">Torcedor</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Menu Inferior -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around py-2 z-50 safe-bottom">
+        <a href="index.html" class="flex flex-col items-center p-2 text-gray-400">
+            <i class="ri-home-4-line text-2xl"></i>
+            <span class="text-xs mt-1">Início</span>
+        </a>
+        <a href="avaliar.html" class="flex flex-col items-center p-2 text-gray-400">
+            <i class="ri-add-circle-line text-2xl"></i>
+            <span class="text-xs mt-1">Avaliar</span>
+        </a>
+        <a href="buscar.html" class="flex flex-col items-center p-2 text-gray-400">
+            <i class="ri-search-line text-2xl"></i>
+            <span class="text-xs mt-1">Buscar</span>
+        </a>
+        <a href="perfil.html" class="flex flex-col items-center p-2 text-fifa-red">
+            <i class="ri-user-line text-2xl"></i>
+            <span class="text-xs mt-1">Perfil</span>
+        </a>
+    </div>
+
+    <!-- Conteúdo -->
+    <main class="pb-20 px-4 pt-4">
+        
+        <!-- Card do Perfil -->
+        <div class="bg-fifa-gradient rounded-2xl p-6 text-white text-center relative overflow-hidden">
+            <div class="absolute -right-4 -top-4 opacity-10">
+                <i class="ri-trophy-line text-8xl"></i>
+            </div>
+            <div class="relative">
+                <div class="inline-block relative">
+                    <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto shadow-lg">
+                        <i class="ri-user-3-line text-5xl text-fifa-red"></i>
+                    </div>
+                    <div class="absolute -bottom-2 -right-2 bg-fifa-gold rounded-full p-1">
+                        <i class="ri-medal-line text-sm text-fifa-red"></i>
+                    </div>
+                </div>
+                <h3 id="perfil-nome" class="text-xl font-bold mt-3">Carlos Torcedor</h3>
+                <p id="perfil-email" class="text-sm opacity-90">torcedor@fifa2026.com</p>
+                
+                <!-- Badges de países visitados -->
+                <div class="flex justify-center gap-2 mt-3">
+                    <span class="flag-badge"><span>🇨🇦</span> Canadá</span>
+                    <span class="flag-badge"><span>🇺🇸</span> EUA</span>
+                    <span class="flag-badge"><span>🇲🇽</span> México</span>
+                </div>
+                
+                <p id="perfil-membro" class="text-xs opacity-75 mt-2">🎉 Viajante desde Janeiro 2024</p>
+                <div class="mt-3 inline-block bg-white bg-opacity-20 rounded-full px-3 py-1 text-xs">
+                    <i class="ri-shield-star-line"></i> Nível: Embaixador da Copa 🌟
+                </div>
+            </div>
+        </div>
+        
+        <!-- Estatísticas do Torcedor -->
+        <div class="grid grid-cols-4 gap-2 mt-4">
+            <div class="stat-card bg-white rounded-xl p-3 text-center shadow-sm">
+                <i class="ri-file-list-line text-xl text-fifa-red"></i>
+                <p class="text-xl font-bold text-gray-800" id="total-avaliacoes">18</p>
+                <p class="text-[10px] text-gray-500">Avaliações</p>
+            </div>
+            <div class="stat-card bg-white rounded-xl p-3 text-center shadow-sm">
+                <i class="ri-heart-line text-xl text-red-500"></i>
+                <p class="text-xl font-bold text-gray-800" id="total-likes">327</p>
+                <p class="text-[10px] text-gray-500">Likes</p>
+            </div>
+            <div class="stat-card bg-white rounded-xl p-3 text-center shadow-sm">
+                <i class="ri-eye-line text-xl text-blue-500"></i>
+                <p class="text-xl font-bold text-gray-800" id="total-visualizacoes">2.4k</p>
+                <p class="text-[10px] text-gray-500">Visualizações</p>
+            </div>
+            <div class="stat-card bg-white rounded-xl p-3 text-center shadow-sm">
+                <i class="ri-map-pin-line text-xl text-green-600"></i>
+                <p class="text-xl font-bold text-gray-800" id="total-cidades">8</p>
+                <p class="text-[10px] text-gray-500">Cidades</p>
+            </div>
+        </div>
+        
+        <!-- Barra de progresso do nível -->
+        <div class="bg-white rounded-xl p-4 shadow-sm mt-4">
+            <div class="flex justify-between text-sm mb-1">
+                <span class="text-gray-600"><i class="ri-star-line text-yellow-500"></i> Progresso para "Lenda da Copa"</span>
+                <span class="text-fifa-red font-semibold">68%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="level-bar" style="width: 68%"></div>
+            </div>
+            <p class="text-xs text-gray-400 mt-2">🏆 Faltam 7 avaliações para atingir o próximo nível!</p>
+        </div>
+        
+        <!-- Países Visitados -->
+        <div class="bg-white rounded-xl p-4 shadow-sm mt-4">
+            <h3 class="font-bold text-gray-800 mb-3 flex items-center">
+                <i class="ri-global-line mr-2 text-fifa-red"></i>
+                Países que explorei 🌎
+            </h3>
+            <div class="flex justify-around text-center">
+                <div class="pais-visited">
+                    <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+                        <span class="text-3xl">🇨🇦</span>
+                    </div>
+                    <p class="text-xs font-semibold mt-1">Canadá</p>
+                    <p class="text-[10px] text-gray-400">2 cidades</p>
+                </div>
+                <div class="pais-visited">
+                    <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+                        <span class="text-3xl">🇺🇸</span>
+                    </div>
+                    <p class="text-xs font-semibold mt-1">Estados Unidos</p>
+                    <p class="text-[10px] text-gray-400">4 cidades</p>
+                </div>
+                <div class="pais-visited">
+                    <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                        <span class="text-3xl">🇲🇽</span>
+                    </div>
+                    <p class="text-xs font-semibold mt-1">México</p>
+                    <p class="text-[10px] text-gray-400">2 cidades</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Minhas Avaliações da Copa -->
+        <div class="bg-white rounded-xl p-4 shadow-sm mt-4">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="font-bold text-gray-800 flex items-center">
+                    <i class="ri-history-line mr-2 text-fifa-red"></i>
+                    Minhas Experiências na Copa
+                </h3>
+                <a href="buscar.html" class="text-[10px] text-fifa-red">Ver todas →</a>
+            </div>
+            
+            <div id="minhas-avaliacoes" class="space-y-3">
+                <!-- Avaliação 1 - Estádio EUA -->
+                <div class="avaliacao-item border-b pb-3 flex justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-fifa-red bg-opacity-10 rounded-full flex items-center justify-center">
+                            <i class="ri-football-line text-fifa-red"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800">🏟️ MetLife Stadium</p>
+                            <p class="text-xs text-gray-500">🇺🇸 Nova York • 2 dias atrás</p>
+                            <div class="flex text-yellow-400 text-xs">
+                                <i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-fifa-red font-semibold">5.0 ★</span>
+                        <div class="flex items-center text-gray-400 text-xs mt-1">
+                            <i class="ri-heart-line"></i>
+                            <span class="ml-1">87 curtidas</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Avaliação 2 - Restaurante México -->
+                <div class="avaliacao-item border-b pb-3 flex justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                            <i class="ri-restaurant-line text-orange-600"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800">🌮 El Vilsito</p>
+                            <p class="text-xs text-gray-500">🇲🇽 Cidade do México • 5 dias atrás</p>
+                            <div class="flex text-yellow-400 text-xs">
+                                <i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-half-line"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-orange-600 font-semibold">4.8 ★</span>
+                        <div class="flex items-center text-gray-400 text-xs mt-1">
+                            <i class="ri-heart-line"></i>
+                            <span class="ml-1">54 curtidas</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Avaliação 3 - Transporte Canadá -->
+                <div class="avaliacao-item border-b pb-3 flex justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <i class="ri-subway-line text-blue-600"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800">🚇 Toronto Subway</p>
+                            <p class="text-xs text-gray-500">🇨🇦 Toronto • 1 semana atrás</p>
+                            <div class="flex text-yellow-400 text-xs">
+                                <i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-line"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-blue-600 font-semibold">4.0 ★</span>
+                        <div class="flex items-center text-gray-400 text-xs mt-1">
+                            <i class="ri-heart-line"></i>
+                            <span class="ml-1">32 curtidas</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Avaliação 4 - Estádio México -->
+                <div class="avaliacao-item pb-3 flex justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <i class="ri-football-line text-green-600"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800">🏟️ Estádio Azteca</p>
+                            <p class="text-xs text-gray-500">🇲🇽 Cidade do México • 2 semanas</p>
+                            <div class="flex text-yellow-400 text-xs">
+                                <i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-green-600 font-semibold">5.0 ★</span>
+                        <div class="flex items-center text-gray-400 text-xs mt-1">
+                            <i class="ri-heart-line"></i>
+                            <span class="ml-1">112 curtidas</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Conquistas da Copa -->
+        <div class="bg-white rounded-xl p-4 shadow-sm mt-4">
+            <h3 class="font-bold text-gray-800 mb-3 flex items-center">
+                <i class="ri-award-line mr-2 text-yellow-500"></i>
+                Minhas Conquistas 🏅
+            </h3>
+            <div class="grid grid-cols-4 gap-2 text-center">
+                <div>
+                    <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto">
+                        <i class="ri-medal-line text-xl text-yellow-600"></i>
+                    </div>
+                    <p class="text-[10px] font-semibold mt-1">1ª Avaliação</p>
+                    <p class="text-[8px] text-gray-400">Jan 2024</p>
+                </div>
+                <div>
+                    <div class="w-12 h-12 bg-fifa-red bg-opacity-10 rounded-full flex items-center justify-center mx-auto">
+                        <i class="ri-trophy-line text-xl text-fifa-red"></i>
+                    </div>
+                    <p class="text-[10px] font-semibold mt-1">Embaixador</p>
+                    <p class="text-[8px] text-gray-400">10+ avaliações</p>
+                </div>
+                <div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+                        <i class="ri-group-line text-xl text-blue-600"></i>
+                    </div>
+                    <p class="text-[10px] font-semibold mt-1">Popular</p>
+                    <p class="text-[8px] text-gray-400">200+ likes</p>
+                </div>
+                <div>
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                        <i class="ri-flight-takeoff-line text-xl text-green-600"></i>
+                    </div>
+                    <p class="text-[10px] font-semibold mt-1">Viajante</p>
+                    <p class="text-[8px] text-gray-400">3 países</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Convite para próxima Copa -->
+        <div class="bg-gradient-to-r from-fifa-blue to-fifa-red rounded-xl p-4 mt-4 text-white text-center">
+            <i class="ri-flight-takeoff-line text-2xl mb-1 block"></i>
+            <p class="text-sm font-semibold">Prepare as malas! ✈️</p>
+            <p class="text-xs opacity-90">Compartilhe suas experiências e ajude outros torcedores</p>
+        </div>
+        
+        <!-- Botão Sair -->
+        <button onclick="logout()" class="w-full bg-gray-200 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-300 transition mt-4 flex items-center justify-center gap-2">
+            <i class="ri-logout-box-line"></i>
+            Sair da Conta
+        </button>
+        
+        <!-- Versão do App -->
+        <p class="text-center text-[10px] text-gray-400 mt-4">FIFA 2026 Guide v1.0 - 🇨🇦 🇺🇸 🇲🇽</p>
+        
+    </main>
+
+    <div id="toast-container" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50"></div>
+
+    <script>
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container')
+            if (!container) return
+            const toast = document.createElement('div')
+            toast.className = `toast ${type}`
+            toast.innerHTML = `<span>${message}</span>`
+            container.appendChild(toast)
+            setTimeout(() => toast.remove(), 3000)
+        }
+        
+        function logout() {
+            localStorage.removeItem('user')
+            localStorage.removeItem('token')
+            localStorage.removeItem('userName')
+            showToast('👋 Até a próxima viagem! Volte sempre para compartilhar suas experiências!', 'success')
+            setTimeout(() => window.location.href = 'login.html', 1500)
+        }
+        
+        function animateNumber(element, final, duration = 800) {
+            if (!element) return
+            const start = 0
+            const increment = final / (duration / 16)
+            let current = start
+            const timer = setInterval(() => {
+                current += increment
+                if (current >= final) {
+                    element.textContent = final
+                    clearInterval(timer)
+                } else {
+                    element.textContent = Math.floor(current)
+                }
+            }, 16)
+        }
+        
+        function updateUserName() {
+            const userData = localStorage.getItem('user')
+            if (userData) {
+                try {
+                    const user = JSON.parse(userData)
+                    const name = user.email?.split('@')[0] || 'Torcedor'
+                    document.getElementById('user-name-display').innerHTML = name
+                    document.getElementById('perfil-nome').innerHTML = user.nome || name
+                    document.getElementById('perfil-email').innerHTML = user.email || 'torcedor@fifa2026.com'
+                } catch(e) {}
+            }
+        }
+        
+        setTimeout(() => {
+            const avaliacoesEl = document.getElementById('total-avaliacoes')
+            const likesEl = document.getElementById('total-likes')
+            const viewsEl = document.getElementById('total-visualizacoes')
+            const cidadesEl = document.getElementById('total-cidades')
+            if (avaliacoesEl) animateNumber(avaliacoesEl, 18, 800)
+            if (likesEl) animateNumber(likesEl, 327, 800)
+            if (viewsEl) animateNumber(viewsEl, 2480, 1000)
+            if (cidadesEl) animateNumber(cidadesEl, 8, 800)
+        }, 200)
+        
+        updateUserName()
+        
+        if (window.location.search.includes('welcome')) {
+            showToast('🏆 Bem-vindo ao FIFA 2026 Guide! Sua jornada começa agora!', 'success')
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIFA 2026 Guide - Buscar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css" rel="stylesheet"/>
+    <style>
+        :root {
+            --fifa-blue: #1a5c9e;
+            --fifa-red: #e31837;
+            --fifa-gold: #ffd700;
+        }
+        .bg-fifa-gradient {
+            background: linear-gradient(135deg, var(--fifa-blue) 0%, var(--fifa-red) 100%);
+        }
+        .result-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .result-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e5e7eb;
+            border-top-color: var(--fifa-red);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .filter-active {
+            background: var(--fifa-red) !important;
+            color: white !important;
+            border-color: var(--fifa-red) !important;
+        }
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 50px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+        .skeleton-card {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 12px;
+            height: 200px;
+        }
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- Barra Superior -->
+    <nav class="bg-fifa-gradient text-white sticky top-0 z-50 shadow-lg">
+        <div class="px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="ri-trophy-line text-2xl"></i>
+                <div>
+                    <h1 class="font-bold text-lg">FIFA 2026 Guide</h1>
+                    <p class="text-[10px] opacity-90">🇨🇦 🇺🇸 🇲🇽</p>
+                </div>
+            </div>
+            <div id="auth-buttons">
+                <button onclick="window.location.href='login.html'" 
+                        class="bg-white text-fifa-red px-4 py-1 rounded-full text-sm">
+                    Entrar
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Menu Inferior -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around py-2 z-50">
+        <a href="index.html" class="flex flex-col items-center p-2 text-gray-400">
+            <i class="ri-home-4-line text-2xl"></i>
+            <span class="text-xs">Início</span>
+        </a>
+        <a href="avaliar.html" class="flex flex-col items-center p-2 text-gray-400">
+            <i class="ri-add-circle-line text-2xl"></i>
+            <span class="text-xs">Avaliar</span>
+        </a>
+        <a href="buscar.html" class="flex flex-col items-center p-2 text-fifa-red">
+            <i class="ri-search-line text-2xl"></i>
+            <span class="text-xs">Buscar</span>
+        </a>
+        <a href="perfil.html" class="flex flex-col items-center p-2 text-gray-400">
+            <i class="ri-user-line text-2xl"></i>
+            <span class="text-xs">Perfil</span>
+        </a>
+    </div>
+
+    <!-- Conteúdo -->
+    <main class="pb-20 px-4 pt-4">
+        
+        <!-- Título -->
+        <div class="mb-4">
+            <h2 class="text-xl font-bold text-gray-800">🔍 Explorar Copa 2026</h2>
+            <p class="text-xs text-gray-500">Encontre estádios, restaurantes e transportes nas cidades-sede</p>
+        </div>
+        
+        <!-- Barra de Busca -->
+        <div class="bg-white rounded-2xl p-4 shadow-md mb-4">
+            <div class="relative">
+                <i class="ri-search-line absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg"></i>
+                <input type="text" id="search-input" placeholder="Buscar estádios, restaurantes, transportes..." 
+                       class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-fifa-red">
+            </div>
+            <button onclick="realizarBusca()" 
+                    class="w-full mt-3 bg-fifa-red text-white py-2 rounded-lg font-semibold hover:bg-red-700 transition">
+                <i class="ri-search-line mr-1"></i> Buscar
+            </button>
+        </div>
+        
+        <!-- Filtros Rápidos -->
+        <div class="grid grid-cols-4 gap-2 mb-4">
+            <button onclick="filtrarCategoria('todos')" id="filtro-todos" 
+                    class="filter-btn py-2 rounded-xl text-sm font-medium bg-fifa-red text-white transition">
+                Todos
+            </button>
+            <button onclick="filtrarCategoria('estadios')" id="filtro-estadios" 
+                    class="filter-btn py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-700 transition">
+                🏟️ Estádios
+            </button>
+            <button onclick="filtrarCategoria('restaurantes')" id="filtro-restaurantes" 
+                    class="filter-btn py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-700 transition">
+                🍽️ Comida
+            </button>
+            <button onclick="filtrarCategoria('transportes')" id="filtro-transportes" 
+                    class="filter-btn py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-700 transition">
+                🚇 Transporte
+            </button>
+        </div>
+        
+        <!-- Filtro por País -->
+        <div class="bg-white rounded-2xl p-4 shadow-md mb-4">
+            <h3 class="font-semibold text-gray-800 mb-2 text-sm">📍 Filtrar por país-sede</h3>
+            <div class="flex gap-2">
+                <button onclick="filtrarPorPais('todos')" id="pais-todos" 
+                        class="pais-btn flex-1 py-2 rounded-xl text-sm font-medium bg-fifa-red text-white transition">
+                    🌎 Todos
+                </button>
+                <button onclick="filtrarPorPais('canada')" id="pais-canada" 
+                        class="pais-btn flex-1 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-700 transition">
+                    🇨🇦 Canadá
+                </button>
+                <button onclick="filtrarPorPais('eua')" id="pais-eua" 
+                        class="pais-btn flex-1 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-700 transition">
+                    🇺🇸 EUA
+                </button>
+                <button onclick="filtrarPorPais('mexico')" id="pais-mexico" 
+                        class="pais-btn flex-1 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-700 transition">
+                    🇲🇽 México
+                </button>
+            </div>
+        </div>
+        
+        <!-- Resultados -->
+        <div>
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="font-bold text-gray-800">📋 Resultados encontrados</h3>
+                <span id="resultados-count" class="text-xs text-gray-400">0 resultados</span>
+            </div>
+            <div id="resultados-container" class="space-y-4">
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+            </div>
+        </div>
+        
+    </main>
+
+    <div id="toast-container"></div>
+
+    <script type="module">
+        import { supabase, getCurrentUser } from './lib/supabaseClient.js'
+        
+        // Estado dos filtros
+        let currentSearchTerm = ''
+        let currentCategoria = 'todos'
+        let currentPais = 'todos'
+        
+        // Mapeamento de cidades por país
+        const cidadesPorPais = {
+            canada: ['Toronto', 'Vancouver'],
+            eua: ['Nova York', 'Los Angeles', 'Miami', 'Dallas', 'Seattle', 'San Francisco'],
+            mexico: ['Cidade do México', 'Guadalajara', 'Monterrey']
+        }
+        
+        // Função para mostrar toast
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container')
+            if (!container) return
+            const toast = document.createElement('div')
+            toast.className = `toast ${type}`
+            toast.innerHTML = `<span>${message}</span>`
+            container.appendChild(toast)
+            setTimeout(() => toast.remove(), 3000)
+        }
+        
+        // Renderizar estrelas
+        function renderStars(nota) {
+            let stars = ''
+            for (let i = 1; i <= 5; i++) {
+                stars += i <= nota ? '<i class="ri-star-fill text-yellow-400 text-sm"></i>' : '<i class="ri-star-line text-gray-300 text-sm"></i>'
+            }
+            return stars
+        }
+        
+        // Pegar bandeira do país pela cidade
+        function getBandeiraPorCidade(cidade) {
+            if (cidadesPorPais.canada.includes(cidade)) return '🇨🇦'
+            if (cidadesPorPais.eua.includes(cidade)) return '🇺🇸'
+            if (cidadesPorPais.mexico.includes(cidade)) return '🇲🇽'
+            return '🌎'
+        }
+        
+        // Renderizar card de estádio
+        function renderEstadioCard(item) {
+            const bandeira = getBandeiraPorCidade(item.cidade)
+            const dataFormatada = new Date(item.data_avaliacao).toLocaleDateString('pt-BR')
+            const usuarioNome = item.usuarios?.nome || item.usuarios?.email?.split('@')[0] || 'Torcedor'
+            const usuarioInicial = usuarioNome.charAt(0).toUpperCase()
+            
+            return `
+                <div class="result-card bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-fifa-red bg-opacity-10 rounded-full flex items-center justify-center">
+                                    <span class="text-fifa-red font-bold text-sm">${usuarioInicial}</span>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800">${usuarioNome}</p>
+                                    <p class="text-xs text-gray-500">${dataFormatada}</p>
+                                </div>
+                            </div>
+                            <span class="text-xs bg-gray-100 px-2 py-1 rounded-full">
+                                ${bandeira} ${item.cidade}
+                            </span>
+                        </div>
+                        <h3 class="font-bold text-lg text-gray-800 mb-1">🏟️ ${item.estadio_nome}</h3>
+                        <div class="flex items-center mb-2">
+                            ${renderStars(item.nota_geral)}
+                            <span class="text-sm font-bold ml-2 text-fifa-red">${item.nota_geral}.0</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 text-center text-xs mb-3 pb-3 border-b">
+                            <div class="bg-gray-50 rounded p-1">
+                                <i class="ri-police-car-line"></i>
+                                <p>Segurança ${item.nota_seguranca}/5</p>
+                            </div>
+                            <div class="bg-gray-50 rounded p-1">
+                                <i class="ri-bus-line"></i>
+                                <p>Acesso ${item.nota_acesso}/5</p>
+                            </div>
+                            <div class="bg-gray-50 rounded p-1">
+                                <i class="ri-building-line"></i>
+                                <p>Estrutura ${item.nota_estrutura}/5</p>
+                            </div>
+                        </div>
+                        ${item.comentario ? `<p class="text-gray-700 text-sm">"${item.comentario.substring(0, 100)}${item.comentario.length > 100 ? '...' : ''}"</p>` : ''}
+                    </div>
+                </div>
+            `
+        }
+        
+        // Renderizar card de restaurante
+        function renderRestauranteCard(item) {
+            const bandeira = getBandeiraPorCidade(item.cidade)
+            const dataFormatada = new Date(item.data_avaliacao).toLocaleDateString('pt-BR')
+            const usuarioNome = item.usuarios?.nome || item.usuarios?.email?.split('@')[0] || 'Torcedor'
+            const usuarioInicial = usuarioNome.charAt(0).toUpperCase()
+            
+            return `
+                <div class="result-card bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                                    <span class="text-orange-600 font-bold text-sm">${usuarioInicial}</span>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800">${usuarioNome}</p>
+                                    <p class="text-xs text-gray-500">${dataFormatada}</p>
+                                </div>
+                            </div>
+                            <span class="text-xs bg-gray-100 px-2 py-1 rounded-full">
+                                ${bandeira} ${item.cidade}
+                            </span>
+                        </div>
+                        <h3 class="font-bold text-lg text-gray-800 mb-1">🍽️ ${item.nome_estabelecimento}</h3>
+                        <p class="text-xs text-gray-500 mb-2">${item.tipo_comida || 'Comida local'}</p>
+                        <div class="flex items-center mb-2">
+                            ${renderStars(item.nota_comida)}
+                            <span class="text-sm font-bold ml-2 text-orange-600">${item.nota_comida}.0</span>
+                        </div>
+                        <div class="flex justify-between text-xs mb-3 pb-3 border-b">
+                            <span><i class="ri-emotion-line"></i> Atendimento ${item.nota_atendimento}/5</span>
+                            <span><i class="ri-money-cny-circle-line"></i> Preço ${item.nota_preco}/5</span>
+                            ${item.preco_medio ? `<span><i class="ri-wallet-line"></i> $${item.preco_medio}</span>` : ''}
+                        </div>
+                        ${item.comentario ? `<p class="text-gray-700 text-sm">"${item.comentario.substring(0, 100)}${item.comentario.length > 100 ? '...' : ''}"</p>` : ''}
+                    </div>
+                </div>
+            `
+        }
+        
+        // Renderizar card de transporte
+        function renderTransporteCard(item) {
+            const bandeira = getBandeiraPorCidade(item.cidade)
+            const dataFormatada = new Date(item.data_avaliacao).toLocaleDateString('pt-BR')
+            const usuarioNome = item.usuarios?.nome || item.usuarios?.email?.split('@')[0] || 'Torcedor'
+            const usuarioInicial = usuarioNome.charAt(0).toUpperCase()
+            
+            const icones = { 'Metrô': '🚇', 'Ônibus': '🚌', 'Trem': '🚆', 'Táxi': '🚕' }
+            const icone = icones[item.tipo_transporte] || '🚌'
+            
+            return `
+                <div class="result-card bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <span class="text-blue-600 font-bold text-sm">${usuarioInicial}</span>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800">${usuarioNome}</p>
+                                    <p class="text-xs text-gray-500">${dataFormatada}</p>
+                                </div>
+                            </div>
+                            <span class="text-xs bg-gray-100 px-2 py-1 rounded-full">
+                                ${bandeira} ${item.cidade}
+                            </span>
+                        </div>
+                        <h3 class="font-bold text-lg text-gray-800 mb-1">${icone} ${item.tipo_transporte} - ${item.nome_linha || item.tipo_transporte}</h3>
+                        <div class="grid grid-cols-3 gap-2 text-center text-xs mb-3 pb-3 border-b">
+                            <div class="bg-gray-50 rounded p-1">
+                                <i class="ri-star-line"></i>
+                                <p>Qualidade ${item.qualidade}/5</p>
+                            </div>
+                            <div class="bg-gray-50 rounded p-1">
+                                <i class="ri-group-line"></i>
+                                <p>Lotação ${item.lotacao}/5</p>
+                            </div>
+                            <div class="bg-gray-50 rounded p-1">
+                                <i class="ri-time-line"></i>
+                                <p>Espera ${item.tempo_espera}/5</p>
+                            </div>
+                        </div>
+                        ${item.comentario ? `<p class="text-gray-700 text-sm">"${item.comentario.substring(0, 100)}${item.comentario.length > 100 ? '...' : ''}"</p>` : ''}
+                    </div>
+                </div>
+            `
+        }
+        
+        // Função principal de busca
+        async function realizarBusca() {
+            const container = document.getElementById('resultados-container')
+            container.innerHTML = '<div class="loading-spinner"></div><p class="text-center text-gray-500">Buscando na Copa 2026...</p>'
+            
+            const termo = document.getElementById('search-input').value.toLowerCase()
+            currentSearchTerm = termo
+            
+            let resultados = []
+            
+            try {
+                // Buscar estádios
+                if (currentCategoria === 'todos' || currentCategoria === 'estadios') {
+                    let query = supabase.from('avaliacoes_estadios').select('*, usuarios:usuario_id(nome, email)')
+                    
+                    if (currentPais !== 'todos') {
+                        const cidades = cidadesPorPais[currentPais]
+                        query = query.in('cidade', cidades)
+                    }
+                    
+                    if (termo) {
+                        query = query.or(`estadio_nome.ilike.%${termo}%,cidade.ilike.%${termo}%,comentario.ilike.%${termo}%`)
+                    }
+                    
+                    const { data, error } = await query.order('data_avaliacao', { ascending: false }).limit(20)
+                    if (!error && data) {
+                        resultados.push(...data.map(r => ({ ...r, tipo: 'estadio' })))
+                    }
+                }
+                
+                // Buscar restaurantes
+                if (currentCategoria === 'todos' || currentCategoria === 'restaurantes') {
+                    let query = supabase.from('avaliacoes_restaurantes').select('*, usuarios:usuario_id(nome, email)')
+                    
+                    if (currentPais !== 'todos') {
+                        const cidades = cidadesPorPais[currentPais]
+                        query = query.in('cidade', cidades)
+                    }
+                    
+                    if (termo) {
+                        query = query.or(`nome_estabelecimento.ilike.%${termo}%,cidade.ilike.%${termo}%,comentario.ilike.%${termo}%`)
+                    }
+                    
+                    const { data, error } = await query.order('data_avaliacao', { ascending: false }).limit(20)
+                    if (!error && data) {
+                        resultados.push(...data.map(r => ({ ...r, tipo: 'restaurante' })))
+                    }
+                }
+                
+                // Buscar transportes
+                if (currentCategoria === 'todos' || currentCategoria === 'transportes') {
+                    let query = supabase.from('avaliacoes_transportes').select('*, usuarios:usuario_id(nome, email)')
+                    
+                    if (currentPais !== 'todos') {
+                        const cidades = cidadesPorPais[currentPais]
+                        query = query.in('cidade', cidades)
+                    }
+                    
+                    if (termo) {
+                        query = query.or(`tipo_transporte.ilike.%${termo}%,cidade.ilike.%${termo}%,comentario.ilike.%${termo}%`)
+                    }
+                    
+                    const { data, error } = await query.order('data_avaliacao', { ascending: false }).limit(20)
+                    if (!error && data) {
+                        resultados.push(...data.map(r => ({ ...r, tipo: 'transporte' })))
+                    }
+                }
+                
+                // Ordenar por data
+                resultados.sort((a, b) => new Date(b.data_avaliacao) - new Date(a.data_avaliacao))
+                
+                document.getElementById('resultados-count').innerHTML = `${resultados.length} resultados`
+                
+                if (resultados.length === 0) {
+                    container.innerHTML = `
+                        <div class="bg-white rounded-xl p-8 text-center">
+                            <i class="ri-search-eye-line text-5xl text-gray-300 mb-3 block"></i>
+                            <p class="text-gray-500">Nenhum resultado encontrado para "${termo || 'esta busca'}"</p>
+                            <p class="text-xs text-gray-400 mt-2">Tente buscar por estádios, restaurantes ou cidades-sede</p>
+                        </div>
+                    `
+                    return
+                }
+                
+                container.innerHTML = resultados.map(item => {
+                    if (item.tipo === 'estadio') return renderEstadioCard(item)
+                    if (item.tipo === 'restaurante') return renderRestauranteCard(item)
+                    if (item.tipo === 'transporte') return renderTransporteCard(item)
+                    return ''
+                }).join('')
+                
+            } catch (error) {
+                console.error('Erro na busca:', error)
+                container.innerHTML = `<div class="bg-white rounded-xl p-8 text-center text-red-500">Erro ao buscar: ${error.message}</div>`
+            }
+        }
+        
+        // Funções de filtro
+        window.filtrarCategoria = (categoria) => {
+            currentCategoria = categoria
+            
+            // Atualizar estilo dos botões de categoria
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-fifa-red', 'text-white')
+                btn.classList.add('bg-gray-100', 'text-gray-700')
+            })
+            
+            const btnMap = {
+                'todos': 'filtro-todos',
+                'estadios': 'filtro-estadios',
+                'restaurantes': 'filtro-restaurantes',
+                'transportes': 'filtro-transportes'
+            }
+            
+            const activeBtn = document.getElementById(btnMap[categoria])
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-gray-100', 'text-gray-700')
+                activeBtn.classList.add('bg-fifa-red', 'text-white')
+            }
+            
+            realizarBusca()
+        }
+        
+        window.filtrarPorPais = (pais) => {
+            currentPais = pais
+            
+            // Atualizar estilo dos botões de país
+            document.querySelectorAll('.pais-btn').forEach(btn => {
+                btn.classList.remove('bg-fifa-red', 'text-white')
+                btn.classList.add('bg-gray-100', 'text-gray-700')
+            })
+            
+            const btnMap = {
+                'todos': 'pais-todos',
+                'canada': 'pais-canada',
+                'eua': 'pais-eua',
+                'mexico': 'pais-mexico'
+            }
+            
+            const activeBtn = document.getElementById(btnMap[pais])
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-gray-100', 'text-gray-700')
+                activeBtn.classList.add('bg-fifa-red', 'text-white')
+            }
+            
+            realizarBusca()
+        }
+        
+        window.realizarBusca = realizarBusca
+        
+        // Atualizar UI de autenticação
+        async function updateAuthUI() {
+            const user = await getCurrentUser()
+            const authButtons = document.getElementById('auth-buttons')
+            
+            if (user) {
+                const nome = user.user_metadata?.nome_completo || user.email?.split('@')[0] || 'Torcedor'
+                authButtons.innerHTML = `
+                    <div class="flex items-center space-x-2 bg-white bg-opacity-20 rounded-full px-3 py-1">
+                        <i class="ri-user-smile-line"></i>
+                        <span class="text-sm font-semibold">${nome.split(' ')[0]}</span>
+                    </div>
+                `
+            } else {
+                authButtons.innerHTML = `
+                    <button onclick="window.location.href='login.html'" 
+                            class="bg-white text-fifa-red px-4 py-1 rounded-full text-sm">
+                        Entrar
+                    </button>
+                `
+            }
+        }
+        
+        // Inicializar
+        updateAuthUI()
+        
+        // Buscar ao pressionar Enter
+        document.getElementById('search-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') realizarBusca()
+        })
+        
+        // Carregar resultados iniciais
+        setTimeout(() => {
+            realizarBusca()
+        }, 500)
+    </script>
+</body>
+</html>

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>FIFA 2026 Guide - Seu guia para a Copa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        :root {
+            --fifa-blue: #1a5c9e;
+            --fifa-red: #e31837;
+            --fifa-gold: #ffd700;
+        }
+        .bg-fifa-gradient {
+            background: linear-gradient(135deg, var(--fifa-blue) 0%, var(--fifa-red) 100%);
+        }
+        .filter-chip {
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .filter-chip.active {
+            background: var(--fifa-red) !important;
+            color: white !important;
+        }
+        .demo-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .demo-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e5e7eb;
+            border-top-color: var(--fifa-red);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 50px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- Barra Superior -->
+    <nav class="bg-fifa-gradient text-white sticky top-0 z-50 shadow-lg">
+        <div class="px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="ri-trophy-line text-2xl"></i>
+                <div>
+                    <h1 class="font-bold text-lg">FIFA 2026 Guide</h1>
+                    <p class="text-[10px] opacity-90">🇨🇦 🇺🇸 🇲🇽</p>
+                </div>
+            </div>
+            <div id="auth-buttons">
+                <button onclick="window.location.href='login.html'" 
+                        class="bg-white text-fifa-red px-4 py-1 rounded-full font-semibold text-sm">
+                    Entrar
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Menu Inferior -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around py-2 z-50 safe-bottom">
+        <a href="index.html" class="flex flex-col items-center p-2 text-fifa-red">
+            <i class="ri-home-4-line text-2xl"></i>
+            <span class="text-xs mt-1">Início</span>
+        </a>
+        <a href="avaliar.html" class="flex flex-col items-center p-2 text-gray-400">
+            <i class="ri-add-circle-line text-2xl"></i>
+            <span class="text-xs mt-1">Avaliar</span>
+        </a>
+        <a href="buscar.html" class="flex flex-col items-center p-2 text-gray-400">
+            <i class="ri-search-line text-2xl"></i>
+            <span class="text-xs mt-1">Buscar</span>
+        </a>
+        <a href="perfil.html" class="flex flex-col items-center p-2 text-gray-400">
+            <i class="ri-user-line text-2xl"></i>
+            <span class="text-xs mt-1">Perfil</span>
+        </a>
+    </div>
+
+    <!-- Conteúdo -->
+    <main class="pb-20 px-4 pt-4">
+        
+        <!-- Header da Copa -->
+        <div class="bg-fifa-gradient rounded-2xl p-5 text-white mb-4 relative overflow-hidden">
+            <div class="absolute -right-4 -top-4 opacity-10">
+                <i class="ri-trophy-line text-8xl"></i>
+            </div>
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-sm opacity-90">Bem-vindo, <span id="welcome-name">Torcedor</span>! 👋</p>
+                    <p class="text-xs opacity-75 mt-1">Sua jornada pela Copa do Mundo 2026 começa aqui</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-2xl font-bold">2026</div>
+                    <div class="text-[10px]">🇨🇦 🇺🇸 🇲🇽</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filtros por País -->
+        <div class="overflow-x-auto scrollbar-hide mb-4">
+            <div class="flex space-x-2 pb-2">
+                <button onclick="filtrarPorPais('todos')" class="filter-chip active bg-fifa-red text-white px-4 py-2 rounded-full text-sm" data-pais="todos">
+                    <i class="ri-global-line mr-1"></i> Todos
+                </button>
+                <button onclick="filtrarPorPais('canada')" class="filter-chip bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm" data-pais="canada">
+                    🇨🇦 Canadá
+                </button>
+                <button onclick="filtrarPorPais('eua')" class="filter-chip bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm" data-pais="eua">
+                    🇺🇸 Estados Unidos
+                </button>
+                <button onclick="filtrarPorPais('mexico')" class="filter-chip bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm" data-pais="mexico">
+                    🇲🇽 México
+                </button>
+            </div>
+        </div>
+        
+        <!-- Lista de avaliações -->
+        <div id="feed-container" class="space-y-4">
+            <div class="loading-spinner"></div>
+        </div>
+        
+    </main>
+
+    <div id="toast-container"></div>
+
+    <script type="module">
+        import { supabase, getCurrentUser, isAuthenticated } from './lib/supabaseClient.js'
+        
+        // ========== FUNÇÕES DE RENDERIZAÇÃO ==========
+        
+        function renderStars(nota) {
+            let stars = ''
+            for (let i = 1; i <= 5; i++) {
+                stars += i <= nota ? '<i class="ri-star-fill text-yellow-400 text-sm"></i>' : '<i class="ri-star-line text-gray-300 text-sm"></i>'
+            }
+            return stars
+        }
+        
+        function getPaisPorCidade(cidade) {
+            const cidadesMap = {
+                'Toronto': 'canada', 'Vancouver': 'canada',
+                'Nova York': 'eua', 'Los Angeles': 'eua', 'Miami': 'eua', 'Dallas': 'eua',
+                'Cidade do México': 'mexico', 'Guadalajara': 'mexico', 'Monterrey': 'mexico'
+            }
+            return cidadesMap[cidade] || 'eua'
+        }
+        
+        function getBandeira(pais) {
+            if (pais === 'canada') return '🇨🇦'
+            if (pais === 'eua') return '🇺🇸'
+            if (pais === 'mexico') return '🇲🇽'
+            return '🌎'
+        }
+        
+        function renderEstadioCard(avaliacao) {
+            const pais = getPaisPorCidade(avaliacao.cidade)
+            const dataFormatada = new Date(avaliacao.data_avaliacao).toLocaleDateString('pt-BR')
+            const usuarioNome = avaliacao.usuarios?.nome || avaliacao.usuarios?.email?.split('@')[0] || 'Torcedor'
+            const usuarioInicial = usuarioNome.charAt(0).toUpperCase()
+            
+            return `
+                <div class="bg-white rounded-xl shadow-md overflow-hidden demo-card">
+                    <div class="p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-fifa-red bg-opacity-10 rounded-full flex items-center justify-center">
+                                    <span class="text-fifa-red font-bold text-sm">${usuarioInicial}</span>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800">${usuarioNome}</p>
+                                    <p class="text-xs text-gray-500">${dataFormatada}</p>
+                                </div>
+                            </div>
+                            <span class="text-xs bg-gray-100 px-2 py-1 rounded-full">
+                                ${getBandeira(pais)} ${avaliacao.cidade}
+                            </span>
+                        </div>
+                        <h3 class="font-bold text-lg text-gray-800 mb-1">🏟️ ${avaliacao.estadio_nome}</h3>
+                        <div class="flex items-center mb-2">
+                            ${renderStars(avaliacao.nota_geral)}
+                            <span class="text-sm font-bold ml-2 text-fifa-red">${avaliacao.nota_geral}.0</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 text-center text-xs mb-3 pb-3 border-b">
+                            <div class="bg-gray-50 rounded p-1">
+                                <i class="ri-police-car-line"></i>
+                                <p>Segurança ${avaliacao.nota_seguranca}/5</p>
+                            </div>
+                            <div class="bg-gray-50 rounded p-1">
+                                <i class="ri-bus-line"></i>
+                                <p>Acesso ${avaliacao.nota_acesso}/5</p>
+                            </div>
+                            <div class="bg-gray-50 rounded p-1">
+                                <i class="ri-building-line"></i>
+                                <p>Estrutura ${avaliacao.nota_estrutura}/5</p>
+                            </div>
+                        </div>
+                        ${avaliacao.comentario ? `<p class="text-gray-700 text-sm mb-3">"${avaliacao.comentario}"</p>` : ''}
+                        <div class="flex items-center justify-between pt-2">
+                            <button onclick="window.darLike('${avaliacao.id}', 'estadio')" class="flex items-center space-x-1 text-gray-500 hover:text-red-500 transition">
+                                <i class="ri-heart-line text-lg"></i>
+                                <span class="text-sm" id="likes-${avaliacao.id}">0</span>
+                            </button>
+                            <button onclick="window.compartilhar('${avaliacao.id}')" class="flex items-center space-x-1 text-gray-500 hover:text-blue-500 transition">
+                                <i class="ri-share-line text-lg"></i>
+                                <span class="text-sm">Compartilhar</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `
+        }
+        
+        // ========== FUNÇÕES DE CARREGAMENTO DO SUPABASE ==========
+        
+        async function getAvaliacoesEstadios(filtros = {}) {
+            let query = supabase
+                .from('avaliacoes_estadios')
+                .select(`
+                    *,
+                    usuarios:usuario_id (nome, email)
+                `)
+                .order('data_avaliacao', { ascending: false })
+            
+            if (filtros.cidade) {
+                query = query.ilike('cidade', `%${filtros.cidade}%`)
+            }
+            
+            const { data, error } = await query
+            return { data, error }
+        }
+        
+        async function darLikeNoBanco(avaliacao_id, tipo_avaliacao) {
+            const user = await getCurrentUser()
+            if (!user) {
+                showToast('Faça login para curtir!', 'error')
+                return { error: 'Não autenticado' }
+            }
+            
+            // Verificar se já deu like
+            const { data: existing } = await supabase
+                .from('likes_avaliacoes')
+                .select('id')
+                .eq('usuario_id', user.id)
+                .eq('avaliacao_id', avaliacao_id)
+                .eq('tipo_avaliacao', tipo_avaliacao)
+                .single()
+            
+            if (existing) {
+                const { error } = await supabase
+                    .from('likes_avaliacoes')
+                    .delete()
+                    .eq('id', existing.id)
+                return { action: 'unliked', error }
+            } else {
+                const { data, error } = await supabase
+                    .from('likes_avaliacoes')
+                    .insert([{
+                        usuario_id: user.id,
+                        avaliacao_id: avaliacao_id,
+                        tipo_avaliacao: tipo_avaliacao
+                    }])
+                return { action: 'liked', data, error }
+            }
+        }
+        
+        async function getLikesCount(avaliacao_id, tipo_avaliacao) {
+            const { count, error } = await supabase
+                .from('likes_avaliacoes')
+                .select('id', { count: 'exact', head: true })
+                .eq('avaliacao_id', avaliacao_id)
+                .eq('tipo_avaliacao', tipo_avaliacao)
+            return { count, error }
+        }
+        
+        // ========== FUNÇÃO PRINCIPAL DE CARREGAR FEED ==========
+        
+        let currentFilter = 'todos'
+        
+        async function carregarFeed() {
+            const container = document.getElementById('feed-container')
+            container.innerHTML = '<div class="loading-spinner"></div><p class="text-center text-gray-500">Carregando avaliações da Copa 2026...</p>'
+            
+            const filtros = {}
+            if (currentFilter !== 'todos') {
+                const cidadeMap = {
+                    'canada': 'Toronto',
+                    'eua': 'Nova York', 
+                    'mexico': 'Cidade do México'
+                }
+                filtros.cidade = cidadeMap[currentFilter]
+            }
+            
+            const { data, error } = await getAvaliacoesEstadios(filtros)
+            
+            if (error) {
+                container.innerHTML = `<div class="text-red-500 text-center p-4">Erro ao carregar: ${error.message}</div>`
+                return
+            }
+            
+            if (!data || data.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-xl p-8 text-center">
+                        <i class="ri-information-line text-5xl text-gray-300 mb-3 block"></i>
+                        <p class="text-gray-500">Nenhuma avaliação encontrada para este país</p>
+                        <a href="avaliar.html" class="inline-block mt-3 text-fifa-red font-semibold text-sm">
+                            Seja o primeiro a avaliar para a Copa 2026!
+                        </a>
+                    </div>
+                `
+                return
+            }
+            
+            // Renderizar cards e carregar likes
+            container.innerHTML = data.map(avaliacao => renderEstadioCard(avaliacao)).join('')
+            
+            // Carregar contagem de likes para cada avaliação
+            for (const avaliacao of data) {
+                const { count } = await getLikesCount(avaliacao.id, 'estadio')
+                const likesSpan = document.getElementById(`likes-${avaliacao.id}`)
+                if (likesSpan) likesSpan.textContent = count || 0
+            }
+        }
+        
+        // ========== FUNÇÕES GLOBAIS ==========
+        
+        window.filtrarPorPais = (pais) => {
+            currentFilter = pais
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.classList.remove('active', 'bg-fifa-red', 'text-white')
+                chip.classList.add('bg-gray-100', 'text-gray-700')
+            })
+            const activeChip = document.querySelector(`.filter-chip[data-pais="${pais}"]`)
+            if (activeChip) {
+                activeChip.classList.add('active', 'bg-fifa-red', 'text-white')
+                activeChip.classList.remove('bg-gray-100', 'text-gray-700')
+            }
+            carregarFeed()
+        }
+        
+        window.darLike = async (id, tipo) => {
+            const user = await getCurrentUser()
+            if (!user) {
+                showToast('Faça login para curtir!', 'error')
+                setTimeout(() => window.location.href = 'login.html', 1500)
+                return
+            }
+            
+            const result = await darLikeNoBanco(id, tipo)
+            if (result.error) {
+                showToast('Erro ao curtir', 'error')
+            } else {
+                const mensagem = result.action === 'liked' ? '👍 Curtida adicionada!' : '👎 Curtida removida!'
+                showToast(mensagem, 'success')
+                // Atualizar contagem
+                const { count } = await getLikesCount(id, tipo)
+                const likesSpan = document.getElementById(`likes-${id}`)
+                if (likesSpan) likesSpan.textContent = count || 0
+            }
+        }
+        
+        window.compartilhar = (id) => {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'FIFA 2026 Guide',
+                    text: 'Confira esta avaliação para a Copa do Mundo 2026!',
+                    url: window.location.href
+                }).catch(() => showToast('Link copiado!', 'success'))
+            } else {
+                navigator.clipboard.writeText(window.location.href)
+                showToast('Link copiado para área de transferência!', 'success')
+            }
+        }
+        
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container')
+            if (!container) return
+            const toast = document.createElement('div')
+            toast.className = `toast ${type}`
+            toast.innerHTML = `<span>${message}</span>`
+            container.appendChild(toast)
+            setTimeout(() => toast.remove(), 3000)
+        }
+        
+        async function updateAuthUI() {
+            const user = await getCurrentUser()
+            const authButtons = document.getElementById('auth-buttons')
+            const welcomeName = document.getElementById('welcome-name')
+            
+            if (user) {
+                const nome = user.user_metadata?.nome_completo || user.email?.split('@')[0] || 'Torcedor'
+                welcomeName.innerHTML = nome
+                authButtons.innerHTML = `
+                    <div class="flex items-center space-x-2 bg-white bg-opacity-20 rounded-full px-3 py-1">
+                        <i class="ri-user-smile-line"></i>
+                        <span class="text-sm font-semibold">${nome.split(' ')[0]}</span>
+                    </div>
+                `
+            } else {
+                welcomeName.innerHTML = 'Torcedor'
+                authButtons.innerHTML = `
+                    <button onclick="window.location.href='login.html'" 
+                            class="bg-white text-fifa-red px-4 py-1 rounded-full font-semibold text-sm">
+                        Entrar
+                    </button>
+                `
+            }
+        }
+        
+        // ========== INICIALIZAÇÃO ==========
+        
+        // Configurar listener de autenticação
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+                updateAuthUI()
+                carregarFeed()
+            }
+        })
+        
+        // Inicializar
+        updateAuthUI()
+        carregarFeed()
+    </script>
+</body>
+</html>

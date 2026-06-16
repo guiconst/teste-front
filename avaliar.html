@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIFA 2026 Guide - Avaliar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css" rel="stylesheet"/>
+    <style>
+        :root { --fifa-red: #e31837; --fifa-blue: #1a5c9e; }
+        .bg-fifa-gradient { background: linear-gradient(135deg, var(--fifa-blue) 0%, var(--fifa-red) 100%); }
+        .tipo-btn { transition: all 0.2s ease; cursor: pointer; }
+        .tipo-btn.active { border-color: var(--fifa-red) !important; background-color: #fee2e2 !important; color: var(--fifa-red) !important; }
+        .nota-btn { width: 45px; height: 45px; border-radius: 50%; background: #f3f4f6; display: inline-flex; align-items: center; justify-content: center; font-size: 1.3rem; cursor: pointer; margin: 0 3px; border: none; }
+        .nota-btn.selected { background: #fbbf24; color: white; transform: scale(1.1); }
+        .form-avaliacao { transition: opacity 0.3s ease; }
+        .hidden { display: none; }
+        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 12px 20px; border-radius: 50px; z-index: 1000; animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { transform: translateX(-50%) translateY(100px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- Barra Superior -->
+    <nav class="bg-fifa-gradient text-white sticky top-0 z-50 shadow-lg">
+        <div class="px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="ri-trophy-line text-2xl"></i>
+                <div>
+                    <h1 class="font-bold text-lg">FIFA 2026 Guide</h1>
+                    <p class="text-[10px] opacity-90">🇨🇦 🇺🇸 🇲🇽</p>
+                </div>
+            </div>
+            <div id="auth-buttons">
+                <button onclick="window.location.href='login.html'" class="bg-white text-fifa-red px-4 py-1 rounded-full text-sm">Entrar</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Menu Inferior -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around py-2 z-50">
+        <a href="index.html" class="flex flex-col items-center p-2 text-gray-400">
+            <i class="ri-home-4-line text-2xl"></i>
+            <span class="text-xs">Início</span>
+        </a>
+        <a href="avaliar.html" class="flex flex-col items-center p-2 text-fifa-red">
+            <i class="ri-add-circle-line text-2xl"></i>
+            <span class="text-xs">Avaliar</span>
+        </a>
+        <a href="buscar.html" class="flex flex-col items-center p-2 text-gray-400">
+            <i class="ri-search-line text-2xl"></i>
+            <span class="text-xs">Buscar</span>
+        </a>
+        <a href="perfil.html" class="flex flex-col items-center p-2 text-gray-400">
+            <i class="ri-user-line text-2xl"></i>
+            <span class="text-xs">Perfil</span>
+        </a>
+    </div>
+
+    <!-- Conteúdo -->
+    <main class="pb-20 px-4 pt-4">
+        <div class="bg-white rounded-2xl p-5 shadow-md">
+            <h2 class="text-2xl font-bold mb-2 flex items-center">
+                <i class="ri-star-line text-yellow-500 mr-2"></i>Avaliar para a Copa 2026
+            </h2>
+            <p class="text-sm text-gray-500 mb-4">Compartilhe sua experiência nas cidades-sede! 🏆</p>
+            
+            <!-- Tipo de avaliação - 3 BOTÕES -->
+            <div class="mb-6">
+                <label class="block text-gray-700 font-semibold mb-3">O que você quer avaliar?</label>
+                <div class="grid grid-cols-3 gap-3">
+                    <button onclick="selecionarTipo('estadio')" id="btn-estadio" class="tipo-btn active py-3 rounded-xl border-2 border-fifa-red bg-red-50 text-fifa-red">
+                        <i class="ri-football-line text-2xl block mb-1"></i>
+                        <span class="text-sm">🏟️ Estádio</span>
+                    </button>
+                    <button onclick="selecionarTipo('transporte')" id="btn-transporte" class="tipo-btn py-3 rounded-xl border-2 border-gray-200 bg-white text-gray-500">
+                        <i class="ri-bus-line text-2xl block mb-1"></i>
+                        <span class="text-sm">🚇 Transporte</span>
+                    </button>
+                    <button onclick="selecionarTipo('restaurante')" id="btn-restaurante" class="tipo-btn py-3 rounded-xl border-2 border-gray-200 bg-white text-gray-500">
+                        <i class="ri-restaurant-line text-2xl block mb-1"></i>
+                        <span class="text-sm">🍽️ Comida</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- ========== FORMULÁRIO ESTÁDIO ========== -->
+            <div id="form-estadio" class="form-avaliacao space-y-4">
+                <h3 class="font-bold text-lg text-fifa-red border-b pb-2">🏟️ Avaliar Estádio da Copa</h3>
+                
+                <input type="text" id="estadio-nome" placeholder="Nome do Estádio *" class="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:border-fifa-red">
+                
+                <select id="estadio-cidade" class="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:border-fifa-red">
+                    <option value="">Selecione a cidade-sede *</option>
+                    <optgroup label="🇨🇦 Canadá">
+                        <option value="Toronto">Toronto - BMO Field</option>
+                        <option value="Vancouver">Vancouver - BC Place</option>
+                    </optgroup>
+                    <optgroup label="🇺🇸 Estados Unidos">
+                        <option value="Nova York">Nova York - MetLife Stadium</option>
+                        <option value="Los Angeles">Los Angeles - SoFi Stadium</option>
+                        <option value="Miami">Miami - Hard Rock Stadium</option>
+                        <option value="Dallas">Dallas - AT&T Stadium</option>
+                        <option value="Seattle">Seattle - Lumen Field</option>
+                        <option value="San Francisco">San Francisco - Levi's Stadium</option>
+                    </optgroup>
+                    <optgroup label="🇲🇽 México">
+                        <option value="Cidade do México">Cidade do México - Estádio Azteca</option>
+                        <option value="Guadalajara">Guadalajara - Estádio Akron</option>
+                        <option value="Monterrey">Monterrey - Estádio BBVA</option>
+                    </optgroup>
+                </select>
+                
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">⭐ Nota Geral</label>
+                    <div class="flex justify-center space-x-3" id="nota-geral-estadio"></div>
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">🛡️ Segurança</label>
+                    <div class="flex justify-center space-x-3" id="nota-seguranca-estadio"></div>
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">🚌 Acesso/Transporte</label>
+                    <div class="flex justify-center space-x-3" id="nota-acesso-estadio"></div>
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">🏗️ Estrutura/Conforto</label>
+                    <div class="flex justify-center space-x-3" id="nota-estrutura-estadio"></div>
+                </div>
+                
+                <textarea id="comentario-estadio" placeholder="📝 Conte sua experiência no estádio (atmosfera, torcida, instalações)..." rows="4" class="w-full p-3 border border-gray-300 rounded-xl"></textarea>
+                
+                <button onclick="publicarAvaliacaoEstadio()" class="w-full bg-fifa-red text-white py-3 rounded-xl font-semibold hover:bg-red-700 transition">
+                    <i class="ri-send-plane-line mr-2"></i>Publicar Avaliação do Estádio
+                </button>
+            </div>
+            
+            <!-- ========== FORMULÁRIO TRANSPORTE ========== -->
+            <div id="form-transporte" class="form-avaliacao hidden space-y-4">
+                <h3 class="font-bold text-lg text-fifa-red border-b pb-2">🚇 Avaliar Transporte nas Cidades-Sede</h3>
+                
+                <select id="transporte-tipo" class="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:border-fifa-red">
+                    <option value="">Selecione o tipo de transporte *</option>
+                    <option value="Metrô">🚇 Metrô / Subway</option>
+                    <option value="Ônibus">🚌 Ônibus</option>
+                    <option value="Trem">🚆 Trem / Commuter Rail</option>
+                    <option value="Táxi">🚕 Táxi / Uber / Lyft</option>
+                    <option value="Ônibus Turístico">🚍 Ônibus Turístico</option>
+                </select>
+                
+                <select id="transporte-cidade" class="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:border-fifa-red">
+                    <option value="">Selecione a cidade *</option>
+                    <option value="Toronto">🇨🇦 Toronto</option>
+                    <option value="Vancouver">🇨🇦 Vancouver</option>
+                    <option value="Nova York">🇺🇸 Nova York</option>
+                    <option value="Los Angeles">🇺🇸 Los Angeles</option>
+                    <option value="Miami">🇺🇸 Miami</option>
+                    <option value="Dallas">🇺🇸 Dallas</option>
+                    <option value="Seattle">🇺🇸 Seattle</option>
+                    <option value="Cidade do México">🇲🇽 Cidade do México</option>
+                    <option value="Guadalajara">🇲🇽 Guadalajara</option>
+                    <option value="Monterrey">🇲🇽 Monterrey</option>
+                </select>
+                
+                <input type="text" id="transporte-linha" placeholder="Linha / Estação / Empresa (opcional)" class="w-full p-3 border border-gray-300 rounded-xl">
+                
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">⭐ Qualidade do serviço</label>
+                    <div class="flex justify-center space-x-3" id="nota-qualidade-transporte"></div>
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">👥 Lotação / Superlotação</label>
+                    <div class="flex justify-center space-x-3" id="nota-lotacao-transporte"></div>
+                    <p class="text-xs text-gray-400 mt-1">(1=superlotado, 5=vazio)</p>
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">⏱️ Tempo de espera / Pontualidade</label>
+                    <div class="flex justify-center space-x-3" id="nota-espera-transporte"></div>
+                </div>
+                
+                <input type="number" id="transporte-preco" placeholder="💰 Preço estimado (em dólares USD)" class="w-full p-3 border border-gray-300 rounded-xl" step="0.01">
+                
+                <textarea id="comentario-transporte" placeholder="📝 Conte sua experiência com o transporte (limpeza, segurança, facilidade)..." rows="4" class="w-full p-3 border border-gray-300 rounded-xl"></textarea>
+                
+                <button onclick="publicarAvaliacaoTransporte()" class="w-full bg-fifa-red text-white py-3 rounded-xl font-semibold hover:bg-red-700 transition">
+                    <i class="ri-send-plane-line mr-2"></i>Publicar Avaliação do Transporte
+                </button>
+            </div>
+            
+            <!-- ========== FORMULÁRIO RESTAURANTE ========== -->
+            <div id="form-restaurante" class="form-avaliacao hidden space-y-4">
+                <h3 class="font-bold text-lg text-fifa-red border-b pb-2">🍽️ Avaliar Restaurante / Comida Local</h3>
+                
+                <input type="text" id="restaurante-nome" placeholder="Nome do Estabelecimento *" class="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:border-fifa-red">
+                
+                <select id="restaurante-cidade" class="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:border-fifa-red">
+                    <option value="">Selecione a cidade *</option>
+                    <option value="Toronto">🇨🇦 Toronto</option>
+                    <option value="Vancouver">🇨🇦 Vancouver</option>
+                    <option value="Nova York">🇺🇸 Nova York</option>
+                    <option value="Los Angeles">🇺🇸 Los Angeles</option>
+                    <option value="Miami">🇺🇸 Miami</option>
+                    <option value="Dallas">🇺🇸 Dallas</option>
+                    <option value="Cidade do México">🇲🇽 Cidade do México</option>
+                    <option value="Guadalajara">🇲🇽 Guadalajara</option>
+                    <option value="Monterrey">🇲🇽 Monterrey</option>
+                </select>
+                
+                <select id="restaurante-tipo" class="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:border-fifa-red">
+                    <option value="">Tipo de comida *</option>
+                    <option value="Brasileira">🇧🇷 Brasileira</option>
+                    <option value="Mexicana">🇲🇽 Mexicana</option>
+                    <option value="Americana">🇺🇸 Americana</option>
+                    <option value="Fast Food">🍔 Fast Food</option>
+                    <option value="Italiana">🍝 Italiana</option>
+                    <option value="Japonesa">🍣 Japonesa</option>
+                    <option value="Vegetariana">🥗 Vegetariana/Vegana</option>
+                    <option value="Petiscos">🍺 Petiscos / Sports Bar</option>
+                </select>
+                
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">⭐ Qualidade da comida</label>
+                    <div class="flex justify-center space-x-3" id="nota-comida-restaurante"></div>
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">👨‍🍳 Atendimento / Serviço</label>
+                    <div class="flex justify-center space-x-3" id="nota-atendimento-restaurante"></div>
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">💰 Custo-benefício</label>
+                    <div class="flex justify-center space-x-3" id="nota-preco-restaurante"></div>
+                </div>
+                
+                <input type="number" id="restaurante-preco-medio" placeholder="💰 Preço médio por pessoa (USD)" class="w-full p-3 border border-gray-300 rounded-xl" step="0.01">
+                
+                <label class="block text-gray-700 font-semibold">📸 Foto do prato ou local (opcional)</label>
+                <input type="file" id="restaurante-foto" accept="image/*" class="w-full p-2 border border-gray-300 rounded-xl">
+                <p class="text-xs text-gray-400">* Máximo 5MB, formatos: JPG, PNG</p>
+                
+                <textarea id="comentario-restaurante" placeholder="📝 Conte sua experiência no restaurante (comida, ambiente, preço)..." rows="4" class="w-full p-3 border border-gray-300 rounded-xl"></textarea>
+                
+                <button onclick="publicarAvaliacaoRestaurante()" class="w-full bg-fifa-red text-white py-3 rounded-xl font-semibold hover:bg-red-700 transition">
+                    <i class="ri-send-plane-line mr-2"></i>Publicar Avaliação do Restaurante
+                </button>
+            </div>
+        </div>
+        
+        <!-- Dica -->
+        <div class="mt-4 bg-blue-50 rounded-xl p-3 text-xs text-gray-600">
+            <i class="ri-information-line text-blue-500 mr-1"></i>
+            Dica de Copa: Avaliações detalhadas ajudam torcedores do mundo todo a terem a melhor experiência! 🌎
+        </div>
+    </main>
+
+    <div id="toast-container"></div>
+
+    <script>
+        // ========== FUNÇÃO PARA GERAR ESTRELAS ==========
+        function gerarEstrelas(containerId, callback) {
+            const container = document.getElementById(containerId)
+            if (!container) {
+                console.log('Container não encontrado:', containerId)
+                return
+            }
+            container.innerHTML = ''
+            for (let i = 1; i <= 5; i++) {
+                const btn = document.createElement('button')
+                btn.className = 'nota-btn'
+                btn.innerHTML = '★'
+                btn.setAttribute('data-nota', i)
+                btn.onclick = () => {
+                    container.querySelectorAll('.nota-btn').forEach(b => {
+                        b.classList.remove('selected', 'bg-yellow-400', 'text-white')
+                        b.classList.add('bg-gray-100', 'text-gray-400')
+                    })
+                    btn.classList.add('selected', 'bg-yellow-400', 'text-white')
+                    btn.classList.remove('bg-gray-100', 'text-gray-400')
+                    if (callback) callback(i)
+                }
+                container.appendChild(btn)
+            }
+        }
+        
+        // ========== FUNÇÃO PARA MOSTRAR TOAST ==========
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container')
+            if (!container) return
+            const toast = document.createElement('div')
+            toast.className = `toast ${type}`
+            toast.innerHTML = `<span>${message}</span>`
+            container.appendChild(toast)
+            setTimeout(() => toast.remove(), 3000)
+        }
+        
+        // ========== FUNÇÃO PARA SELECIONAR TIPO DE AVALIAÇÃO ==========
+        window.selecionarTipo = (tipo) => {
+            console.log('Selecionando tipo:', tipo)
+            
+            // Esconder todos os formulários
+            const formEstadio = document.getElementById('form-estadio')
+            const formTransporte = document.getElementById('form-transporte')
+            const formRestaurante = document.getElementById('form-restaurante')
+            
+            if (formEstadio) formEstadio.classList.add('hidden')
+            if (formTransporte) formTransporte.classList.add('hidden')
+            if (formRestaurante) formRestaurante.classList.add('hidden')
+            
+            // Mostrar o formulário selecionado
+            if (tipo === 'estadio') {
+                if (formEstadio) formEstadio.classList.remove('hidden')
+            } else if (tipo === 'transporte') {
+                if (formTransporte) formTransporte.classList.remove('hidden')
+            } else if (tipo === 'restaurante') {
+                if (formRestaurante) formRestaurante.classList.remove('hidden')
+            }
+            
+            // Atualizar estilo dos botões
+            const btnEstadio = document.getElementById('btn-estadio')
+            const btnTransporte = document.getElementById('btn-transporte')
+            const btnRestaurante = document.getElementById('btn-restaurante')
+            
+            if (btnEstadio) {
+                btnEstadio.classList.remove('active', 'border-fifa-red', 'bg-red-50', 'text-fifa-red')
+                btnEstadio.classList.add('border-gray-200', 'bg-white', 'text-gray-500')
+            }
+            if (btnTransporte) {
+                btnTransporte.classList.remove('active', 'border-fifa-red', 'bg-red-50', 'text-fifa-red')
+                btnTransporte.classList.add('border-gray-200', 'bg-white', 'text-gray-500')
+            }
+            if (btnRestaurante) {
+                btnRestaurante.classList.remove('active', 'border-fifa-red', 'bg-red-50', 'text-fifa-red')
+                btnRestaurante.classList.add('border-gray-200', 'bg-white', 'text-gray-500')
+            }
+            
+            // Ativar o botão clicado
+            if (tipo === 'estadio' && btnEstadio) {
+                btnEstadio.classList.add('active', 'border-fifa-red', 'bg-red-50', 'text-fifa-red')
+            } else if (tipo === 'transporte' && btnTransporte) {
+                btnTransporte.classList.add('active', 'border-fifa-red', 'bg-red-50', 'text-fifa-red')
+            } else if (tipo === 'restaurante' && btnRestaurante) {
+                btnRestaurante.classList.add('active', 'border-fifa-red', 'bg-red-50', 'text-fifa-red')
+            }
+        }
+        
+        // ========== FUNÇÕES DE PUBLICAÇÃO (MOCK POR ENQUANTO) ==========
+        
+        window.publicarAvaliacaoEstadio = () => {
+            const nome = document.getElementById('estadio-nome').value
+            const cidade = document.getElementById('estadio-cidade').value
+            const comentario = document.getElementById('comentario-estadio').value
+            
+            if (!nome || !cidade) {
+                showToast('Preencha o nome do estádio e a cidade!', 'error')
+                return
+            }
+            
+            showToast('✅ Avaliação do estádio publicada com sucesso! 🏆', 'success')
+            setTimeout(() => window.location.href = 'index.html', 1500)
+        }
+        
+        window.publicarAvaliacaoTransporte = () => {
+            const tipo = document.getElementById('transporte-tipo').value
+            const cidade = document.getElementById('transporte-cidade').value
+            
+            if (!tipo || !cidade) {
+                showToast('Preencha o tipo de transporte e a cidade!', 'error')
+                return
+            }
+            
+            showToast('✅ Avaliação do transporte publicada com sucesso! 🚇', 'success')
+            setTimeout(() => window.location.href = 'index.html', 1500)
+        }
+        
+        window.publicarAvaliacaoRestaurante = () => {
+            const nome = document.getElementById('restaurante-nome').value
+            const cidade = document.getElementById('restaurante-cidade').value
+            
+            if (!nome || !cidade) {
+                showToast('Preencha o nome do restaurante e a cidade!', 'error')
+                return
+            }
+            
+            showToast('✅ Avaliação do restaurante publicada com sucesso! 🍽️', 'success')
+            setTimeout(() => window.location.href = 'index.html', 1500)
+        }
+        
+        // ========== INICIALIZAÇÃO ==========
+        
+        // Gerar todas as estrelas
+        gerarEstrelas('nota-geral-estadio')
+        gerarEstrelas('nota-seguranca-estadio')
+        gerarEstrelas('nota-acesso-estadio')
+        gerarEstrelas('nota-estrutura-estadio')
+        gerarEstrelas('nota-qualidade-transporte')
+        gerarEstrelas('nota-lotacao-transporte')
+        gerarEstrelas('nota-espera-transporte')
+        gerarEstrelas('nota-comida-restaurante')
+        gerarEstrelas('nota-atendimento-restaurante')
+        gerarEstrelas('nota-preco-restaurante')
+        
+        // Garantir que o formulário de estádio está visível no início
+        const formEstadio = document.getElementById('form-estadio')
+        const formTransporte = document.getElementById('form-transporte')
+        const formRestaurante = document.getElementById('form-restaurante')
+        
+        if (formEstadio) formEstadio.classList.remove('hidden')
+        if (formTransporte) formTransporte.classList.add('hidden')
+        if (formRestaurante) formRestaurante.classList.add('hidden')
+        
+        // Garantir que o botão de estádio está ativo
+        const btnEstadio = document.getElementById('btn-estadio')
+        if (btnEstadio) {
+            btnEstadio.classList.add('active', 'border-fifa-red', 'bg-red-50', 'text-fifa-red')
+        }
+        
+        console.log('Página inicializada!')
+    </script>
+</body>
+</html>
