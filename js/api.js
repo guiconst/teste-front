@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000/api' // URL do seu backend
+const API_URL = 'https://copa-backend-2.vercel.app/api' // URL do backend publicado na Vercel
 
 class API {
     constructor() {
@@ -164,8 +164,8 @@ class API {
         })
     }
 
-    async getLikesCount(tipo_avaliacao, id) {
-        return this.request(`/likes/contagem/${tipo_avaliacao}/${id}`)
+    async getLikesCount(avaliacao_id) {
+        return this.request(`/likes/${avaliacao_id}`)
     }
 }
 

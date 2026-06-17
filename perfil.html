@@ -131,9 +131,11 @@
                     <span class="flag-badge"><span>🇲🇽</span> México</span>
                 </div>
                 
-                <p id="perfil-membro" class="text-xs opacity-75 mt-2">🎉 Viajante desde Janeiro 2024</p>
+                <!-- NOTA: "membro desde" e "nível" são placeholders fixos; o backend
+                     não armazena data de cadastro exposta aqui nem sistema de níveis. -->
+                <p id="perfil-membro" class="text-xs opacity-75 mt-2">🎉 Torcedor da Copa 2026</p>
                 <div class="mt-3 inline-block bg-white bg-opacity-20 rounded-full px-3 py-1 text-xs">
-                    <i class="ri-shield-star-line"></i> Nível: Embaixador da Copa 🌟
+                    <i class="ri-shield-star-line"></i> Torcedor FIFA 2026
                 </div>
             </div>
         </div>
@@ -147,12 +149,12 @@
             </div>
             <div class="stat-card bg-white rounded-xl p-3 text-center shadow-sm">
                 <i class="ri-heart-line text-xl text-red-500"></i>
-                <p class="text-xl font-bold text-gray-800" id="total-likes">327</p>
+                <p class="text-xl font-bold text-gray-400" id="total-likes">—</p>
                 <p class="text-[10px] text-gray-500">Likes</p>
             </div>
             <div class="stat-card bg-white rounded-xl p-3 text-center shadow-sm">
                 <i class="ri-eye-line text-xl text-blue-500"></i>
-                <p class="text-xl font-bold text-gray-800" id="total-visualizacoes">2.4k</p>
+                <p class="text-xl font-bold text-gray-400" id="total-visualizacoes">—</p>
                 <p class="text-[10px] text-gray-500">Visualizações</p>
             </div>
             <div class="stat-card bg-white rounded-xl p-3 text-center shadow-sm">
@@ -162,7 +164,10 @@
             </div>
         </div>
         
-        <!-- Barra de progresso do nível -->
+        <!-- Barra de progresso do nível
+             NOTA: conteúdo decorativo/fixo. O backend não tem sistema de níveis,
+             pontos ou conquistas — isso precisaria ser implementado separadamente
+             se você quiser que reflita dados reais. -->
         <div class="bg-white rounded-xl p-4 shadow-sm mt-4">
             <div class="flex justify-between text-sm mb-1">
                 <span class="text-gray-600"><i class="ri-star-line text-yellow-500"></i> Progresso para "Lenda da Copa"</span>
@@ -174,7 +179,8 @@
             <p class="text-xs text-gray-400 mt-2">🏆 Faltam 7 avaliações para atingir o próximo nível!</p>
         </div>
         
-        <!-- Países Visitados -->
+        <!-- Países Visitados
+             NOTA: conteúdo decorativo/fixo, não calculado a partir das avaliações reais. -->
         <div class="bg-white rounded-xl p-4 shadow-sm mt-4">
             <h3 class="font-bold text-gray-800 mb-3 flex items-center">
                 <i class="ri-global-line mr-2 text-fifa-red"></i>
@@ -310,7 +316,8 @@
             </div>
         </div>
         
-        <!-- Conquistas da Copa -->
+        <!-- Conquistas da Copa
+             NOTA: conteúdo decorativo/fixo. Não há sistema de conquistas no backend. -->
         <div class="bg-white rounded-xl p-4 shadow-sm mt-4">
             <h3 class="font-bold text-gray-800 mb-3 flex items-center">
                 <i class="ri-award-line mr-2 text-yellow-500"></i>
@@ -368,7 +375,9 @@
 
     <div id="toast-container" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50"></div>
 
-    <script>
+    <script type="module">
+        import { api } from './js/api.js'
+
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container')
             if (!container) return
@@ -379,10 +388,12 @@
             setTimeout(() => toast.remove(), 3000)
         }
         
-        function logout() {
-            localStorage.removeItem('user')
-            localStorage.removeItem('token')
-            localStorage.removeItem('userName')
+        window.logout = async () => {
+            try {
+                await api.logout()
+            } catch (error) {
+                // mesmo se a chamada falhar, removemos o token local
+            }
             showToast('👋 Até a próxima viagem! Volte sempre para compartilhar suas experiências!', 'success')
             setTimeout(() => window.location.href = 'login.html', 1500)
         }
@@ -403,31 +414,97 @@
             }, 16)
         }
         
-        function updateUserName() {
-            const userData = localStorage.getItem('user')
-            if (userData) {
-                try {
-                    const user = JSON.parse(userData)
-                    const name = user.email?.split('@')[0] || 'Torcedor'
-                    document.getElementById('user-name-display').innerHTML = name
-                    document.getElementById('perfil-nome').innerHTML = user.nome || name
-                    document.getElementById('perfil-email').innerHTML = user.email || 'torcedor@fifa2026.com'
-                } catch(e) {}
+        const iconePorTipo = {
+            estadio: { emoji: '🏟️', bg: 'bg-fifa-red bg-opacity-10', icon: 'ri-football-line text-fifa-red', cor: 'text-fifa-red' },
+            restaurante: { emoji: '🍽️', bg: 'bg-orange-100', icon: 'ri-restaurant-line text-orange-600', cor: 'text-orange-600' },
+            transporte: { emoji: '🚇', bg: 'bg-blue-100', icon: 'ri-subway-line text-blue-600', cor: 'text-blue-600' }
+        }
+        
+        function renderAvaliacaoItem(item) {
+            const info = iconePorTipo[item.tipo]
+            const titulo = item.tipo === 'estadio' ? item.estadio_nome
+                : item.tipo === 'restaurante' ? item.nome_estabelecimento
+                : `${item.tipo_transporte}${item.nome_linha ? ' - ' + item.nome_linha : ''}`
+            const nota = item.tipo === 'estadio' ? item.nota_geral
+                : item.tipo === 'restaurante' ? item.nota_comida
+                : item.qualidade
+            const dataFormatada = new Date(item.data_avaliacao).toLocaleDateString('pt-BR')
+            
+            return `
+                <div class="avaliacao-item border-b pb-3 flex justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 ${info.bg} rounded-full flex items-center justify-center">
+                            <i class="${info.icon}"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800">${info.emoji} ${titulo}</p>
+                            <p class="text-xs text-gray-500">${item.cidade} • ${dataFormatada}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs ${info.cor} font-semibold">${nota ? nota + '.0 ★' : '-'}</span>
+                    </div>
+                </div>
+            `
+        }
+        
+        async function carregarMinhasAvaliacoes(usuarioId) {
+            const container = document.getElementById('minhas-avaliacoes')
+            
+            try {
+                const [estadiosResp, restaurantesResp, transportesResp] = await Promise.all([
+                    api.getEstadios(1, {}),
+                    api.getRestaurantes({}),
+                    api.getTransportes()
+                ])
+                
+                const estadios = (estadiosResp.data || []).filter(a => a.usuario_id === usuarioId).map(a => ({ ...a, tipo: 'estadio' }))
+                const restaurantes = (restaurantesResp || []).filter(a => a.usuario_id === usuarioId).map(a => ({ ...a, tipo: 'restaurante' }))
+                const transportes = (transportesResp || []).filter(a => a.usuario_id === usuarioId).map(a => ({ ...a, tipo: 'transporte' }))
+                
+                const todas = [...estadios, ...restaurantes, ...transportes]
+                    .sort((a, b) => new Date(b.data_avaliacao) - new Date(a.data_avaliacao))
+                
+                document.getElementById('total-avaliacoes').textContent = todas.length
+                
+                const cidadesUnicas = new Set(todas.map(a => a.cidade))
+                document.getElementById('total-cidades').textContent = cidadesUnicas.size
+                
+                if (todas.length === 0) {
+                    container.innerHTML = `
+                        <p class="text-sm text-gray-400 text-center py-4">
+                            Você ainda não fez nenhuma avaliação. 
+                            <a href="avaliar.html" class="text-fifa-red font-semibold">Avalie algo agora!</a>
+                        </p>
+                    `
+                    return
+                }
+                
+                container.innerHTML = todas.slice(0, 10).map(renderAvaliacaoItem).join('')
+            } catch (error) {
+                console.error('Erro ao carregar avaliações:', error)
+                container.innerHTML = `<p class="text-sm text-red-500 text-center py-4">Erro ao carregar suas avaliações.</p>`
             }
         }
         
-        setTimeout(() => {
-            const avaliacoesEl = document.getElementById('total-avaliacoes')
-            const likesEl = document.getElementById('total-likes')
-            const viewsEl = document.getElementById('total-visualizacoes')
-            const cidadesEl = document.getElementById('total-cidades')
-            if (avaliacoesEl) animateNumber(avaliacoesEl, 18, 800)
-            if (likesEl) animateNumber(likesEl, 327, 800)
-            if (viewsEl) animateNumber(viewsEl, 2480, 1000)
-            if (cidadesEl) animateNumber(cidadesEl, 8, 800)
-        }, 200)
+        async function carregarPerfil() {
+            try {
+                const resultado = await api.validarToken()
+                const user = resultado.user
+                const nome = user.user_metadata?.nome_completo || user.email?.split('@')[0] || 'Torcedor'
+                
+                document.getElementById('user-name-display').innerHTML = nome
+                document.getElementById('perfil-nome').innerHTML = nome
+                document.getElementById('perfil-email').innerHTML = user.email
+                
+                await carregarMinhasAvaliacoes(user.id)
+            } catch (error) {
+                // Sem sessão válida: manda para o login
+                window.location.href = 'login.html'
+            }
+        }
         
-        updateUserName()
+        carregarPerfil()
         
         if (window.location.search.includes('welcome')) {
             showToast('🏆 Bem-vindo ao FIFA 2026 Guide! Sua jornada começa agora!', 'success')

@@ -152,7 +152,7 @@
     <div id="toast-container"></div>
 
     <script type="module">
-        import { supabase, getCurrentUser, isAuthenticated } from './lib/supabaseClient.js'
+        import { api } from './js/api.js'
         
         // ========== FUNÇÕES DE RENDERIZAÇÃO ==========
         
@@ -238,71 +238,10 @@
             `
         }
         
-        // ========== FUNÇÕES DE CARREGAMENTO DO SUPABASE ==========
-        
-        async function getAvaliacoesEstadios(filtros = {}) {
-            let query = supabase
-                .from('avaliacoes_estadios')
-                .select(`
-                    *,
-                    usuarios:usuario_id (nome, email)
-                `)
-                .order('data_avaliacao', { ascending: false })
-            
-            if (filtros.cidade) {
-                query = query.ilike('cidade', `%${filtros.cidade}%`)
-            }
-            
-            const { data, error } = await query
-            return { data, error }
-        }
-        
-        async function darLikeNoBanco(avaliacao_id, tipo_avaliacao) {
-            const user = await getCurrentUser()
-            if (!user) {
-                showToast('Faça login para curtir!', 'error')
-                return { error: 'Não autenticado' }
-            }
-            
-            // Verificar se já deu like
-            const { data: existing } = await supabase
-                .from('likes_avaliacoes')
-                .select('id')
-                .eq('usuario_id', user.id)
-                .eq('avaliacao_id', avaliacao_id)
-                .eq('tipo_avaliacao', tipo_avaliacao)
-                .single()
-            
-            if (existing) {
-                const { error } = await supabase
-                    .from('likes_avaliacoes')
-                    .delete()
-                    .eq('id', existing.id)
-                return { action: 'unliked', error }
-            } else {
-                const { data, error } = await supabase
-                    .from('likes_avaliacoes')
-                    .insert([{
-                        usuario_id: user.id,
-                        avaliacao_id: avaliacao_id,
-                        tipo_avaliacao: tipo_avaliacao
-                    }])
-                return { action: 'liked', data, error }
-            }
-        }
-        
-        async function getLikesCount(avaliacao_id, tipo_avaliacao) {
-            const { count, error } = await supabase
-                .from('likes_avaliacoes')
-                .select('id', { count: 'exact', head: true })
-                .eq('avaliacao_id', avaliacao_id)
-                .eq('tipo_avaliacao', tipo_avaliacao)
-            return { count, error }
-        }
-        
         // ========== FUNÇÃO PRINCIPAL DE CARREGAR FEED ==========
         
         let currentFilter = 'todos'
+        let currentUser = null
         
         async function carregarFeed() {
             const container = document.getElementById('feed-container')
@@ -318,14 +257,17 @@
                 filtros.cidade = cidadeMap[currentFilter]
             }
             
-            const { data, error } = await getAvaliacoesEstadios(filtros)
-            
-            if (error) {
+            let resultado
+            try {
+                resultado = await api.getEstadios(1, filtros)
+            } catch (error) {
                 container.innerHTML = `<div class="text-red-500 text-center p-4">Erro ao carregar: ${error.message}</div>`
                 return
             }
             
-            if (!data || data.length === 0) {
+            const data = resultado.data || []
+            
+            if (data.length === 0) {
                 container.innerHTML = `
                     <div class="bg-white rounded-xl p-8 text-center">
                         <i class="ri-information-line text-5xl text-gray-300 mb-3 block"></i>
@@ -343,9 +285,14 @@
             
             // Carregar contagem de likes para cada avaliação
             for (const avaliacao of data) {
-                const { count } = await getLikesCount(avaliacao.id, 'estadio')
-                const likesSpan = document.getElementById(`likes-${avaliacao.id}`)
-                if (likesSpan) likesSpan.textContent = count || 0
+                try {
+                    const likeInfo = await api.getLikesCount(avaliacao.id)
+                    const likesSpan = document.getElementById(`likes-${avaliacao.id}`)
+                    if (likesSpan) likesSpan.textContent = likeInfo.total_likes || 0
+                } catch (error) {
+                    // Se a contagem falhar, mantém o "0" exibido por padrão
+                    console.error('Erro ao buscar likes:', error)
+                }
             }
         }
         
@@ -366,23 +313,22 @@
         }
         
         window.darLike = async (id, tipo) => {
-            const user = await getCurrentUser()
-            if (!user) {
+            if (!currentUser) {
                 showToast('Faça login para curtir!', 'error')
                 setTimeout(() => window.location.href = 'login.html', 1500)
                 return
             }
             
-            const result = await darLikeNoBanco(id, tipo)
-            if (result.error) {
-                showToast('Erro ao curtir', 'error')
-            } else {
-                const mensagem = result.action === 'liked' ? '👍 Curtida adicionada!' : '👎 Curtida removida!'
+            try {
+                const result = await api.toggleLike(id, tipo)
+                const mensagem = result.liked ? '👍 Curtida adicionada!' : '👎 Curtida removida!'
                 showToast(mensagem, 'success')
                 // Atualizar contagem
-                const { count } = await getLikesCount(id, tipo)
+                const likeInfo = await api.getLikesCount(id)
                 const likesSpan = document.getElementById(`likes-${id}`)
-                if (likesSpan) likesSpan.textContent = count || 0
+                if (likesSpan) likesSpan.textContent = likeInfo.total_likes || 0
+            } catch (error) {
+                showToast('Erro ao curtir', 'error')
             }
         }
         
@@ -410,12 +356,18 @@
         }
         
         async function updateAuthUI() {
-            const user = await getCurrentUser()
             const authButtons = document.getElementById('auth-buttons')
             const welcomeName = document.getElementById('welcome-name')
             
-            if (user) {
-                const nome = user.user_metadata?.nome_completo || user.email?.split('@')[0] || 'Torcedor'
+            try {
+                const resultado = await api.validarToken()
+                currentUser = resultado.user
+            } catch (error) {
+                currentUser = null
+            }
+            
+            if (currentUser) {
+                const nome = currentUser.user_metadata?.nome_completo || currentUser.email?.split('@')[0] || 'Torcedor'
                 welcomeName.innerHTML = nome
                 authButtons.innerHTML = `
                     <div class="flex items-center space-x-2 bg-white bg-opacity-20 rounded-full px-3 py-1">
@@ -436,15 +388,6 @@
         
         // ========== INICIALIZAÇÃO ==========
         
-        // Configurar listener de autenticação
-        supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-                updateAuthUI()
-                carregarFeed()
-            }
-        })
-        
-        // Inicializar
         updateAuthUI()
         carregarFeed()
     </script>

@@ -152,8 +152,12 @@
                 <input type="password" id="cadastro-confirm-password" placeholder="Digite novamente" 
                        class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-fifa-red">
             </div>
-            
-        
+
+            <button onclick="fazerCadastro()" class="w-full bg-fifa-red text-white py-3 rounded-xl font-semibold hover:bg-red-700 transition transform active:scale-98 flex items-center justify-center gap-2">
+                <i class="ri-user-add-line"></i>
+                Criar minha conta
+            </button>
+        </div>
         
         <!-- Loading -->
         <div id="loading-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -169,9 +173,9 @@
         </p>
     </div>
     
-    <script>
-        let paisFavorito = ''
-        
+    <script type="module">
+        import { api } from './js/api.js'
+
         function showLoading() { document.getElementById('loading-overlay').classList.remove('hidden') }
         function hideLoading() { document.getElementById('loading-overlay').classList.add('hidden') }
         
@@ -181,18 +185,6 @@
             toast.textContent = message
             document.body.appendChild(toast)
             setTimeout(() => toast.remove(), 3000)
-        }
-        
-        function selecionarPaisFavorito(pais) {
-            paisFavorito = pais
-            const nomes = { canada: '🇨🇦 Canadá', eua: '🇺🇸 EUA', mexico: '🇲🇽 México' }
-            document.querySelectorAll('.country-badge').forEach(el => {
-                el.classList.remove('border-fifa-red', 'bg-red-50')
-                el.classList.add('border-gray-200', 'bg-white')
-            })
-            document.getElementById(`fav-${pais}`).classList.add('border-fifa-red', 'bg-red-50')
-            document.getElementById('pais-favorito').value = pais
-            showMessage(`⚽ ${nomes[pais]} é sua torcida!`, false)
         }
         
         window.mostrarLogin = () => {
@@ -213,7 +205,7 @@
             document.getElementById('tab-login').classList.add('border-transparent', 'text-gray-500')
         }
         
-        window.fazerLogin = () => {
+        window.fazerLogin = async () => {
             const email = document.getElementById('login-email').value
             const password = document.getElementById('login-password').value
             
@@ -223,16 +215,18 @@
             }
             
             showLoading()
-            setTimeout(() => {
+            try {
+                await api.login(email, password)
                 hideLoading()
-                // Simular login (depois conectar com Supabase)
-                localStorage.setItem('user', JSON.stringify({ email, nome: email.split('@')[0] }))
                 showMessage('🏆 Login realizado! Bem-vindo à Copa 2026!', false)
-                setTimeout(() => window.location.href = 'index.html?welcome=true', 1500)
-            }, 1000)
+                setTimeout(() => window.location.href = 'index.html?welcome=true', 1200)
+            } catch (error) {
+                hideLoading()
+                showMessage(error.message || 'Não foi possível entrar. Verifique seus dados.')
+            }
         }
         
-        window.fazerCadastro = () => {
+        window.fazerCadastro = async () => {
             const nome = document.getElementById('cadastro-nome').value
             const email = document.getElementById('cadastro-email').value
             const password = document.getElementById('cadastro-password').value
@@ -253,36 +247,31 @@
                 return
             }
             
-            if (!paisFavorito) {
-                showMessage('Selecione seu país favorito para a Copa 2026!')
-                return
-            }
-            
             showLoading()
-            setTimeout(() => {
+            try {
+                await api.register(email, password, nome)
                 hideLoading()
-                localStorage.setItem('user', JSON.stringify({ email, nome, paisFavorito }))
-                showMessage('🎉 Conta criada! Prepare-se para a Copa 2026!', false)
+                showMessage('🎉 Conta criada! Faça login para continuar.', false)
                 setTimeout(() => {
-                    window.location.href = 'index.html?welcome=true'
-                }, 1500)
-            }, 1000)
+                    window.mostrarLogin()
+                    document.getElementById('login-email').value = email
+                }, 1200)
+            } catch (error) {
+                hideLoading()
+                showMessage(error.message || 'Não foi possível criar a conta.')
+            }
         }
         
         window.recuperarSenha = () => {
-            const email = prompt('Digite seu e-mail para recuperar a senha:')
-            if (email) {
-                showMessage('📧 Instruções enviadas para ' + email, false)
-            }
+            showMessage('📧 Recuperação de senha ainda não disponível nesta versão.')
         }
         
         window.loginComGoogle = () => {
             showMessage('🔴 Google Login - Em breve disponível', false)
         }
         
-        // Verificar se já está logado
-        const user = localStorage.getItem('user')
-        if (user && window.location.pathname.includes('login.html')) {
+        // Verificar se já está logado (token salvo pelo api.js)
+        if (localStorage.getItem('token') && window.location.pathname.includes('login.html')) {
             window.location.href = 'index.html'
         }
     </script>

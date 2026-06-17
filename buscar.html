@@ -194,7 +194,7 @@
     <div id="toast-container"></div>
 
     <script type="module">
-        import { supabase, getCurrentUser } from './lib/supabaseClient.js'
+        import { api } from './js/api.js'
         
         // Estado dos filtros
         let currentSearchTerm = ''
@@ -374,6 +374,16 @@
             `
         }
         
+        // Verifica se um item bate com o termo de busca (filtragem feita no client,
+        // já que o backend não expõe uma rota de busca textual unificada)
+        function bateComTermo(item, termo, camposTexto) {
+            if (!termo) return true
+            const termoLower = termo.toLowerCase()
+            return camposTexto.some(campo => (item[campo] || '').toLowerCase().includes(termoLower))
+                || (item.cidade || '').toLowerCase().includes(termoLower)
+                || (item.comentario || '').toLowerCase().includes(termoLower)
+        }
+        
         // Função principal de busca
         async function realizarBusca() {
             const container = document.getElementById('resultados-container')
@@ -387,59 +397,33 @@
             try {
                 // Buscar estádios
                 if (currentCategoria === 'todos' || currentCategoria === 'estadios') {
-                    let query = supabase.from('avaliacoes_estadios').select('*, usuarios:usuario_id(nome, email)')
-                    
+                    const resp = await api.getEstadios(1, {})
+                    let data = resp.data || []
                     if (currentPais !== 'todos') {
-                        const cidades = cidadesPorPais[currentPais]
-                        query = query.in('cidade', cidades)
+                        data = data.filter(item => cidadesPorPais[currentPais].includes(item.cidade))
                     }
-                    
-                    if (termo) {
-                        query = query.or(`estadio_nome.ilike.%${termo}%,cidade.ilike.%${termo}%,comentario.ilike.%${termo}%`)
-                    }
-                    
-                    const { data, error } = await query.order('data_avaliacao', { ascending: false }).limit(20)
-                    if (!error && data) {
-                        resultados.push(...data.map(r => ({ ...r, tipo: 'estadio' })))
-                    }
+                    data = data.filter(item => bateComTermo(item, termo, ['estadio_nome']))
+                    resultados.push(...data.map(r => ({ ...r, tipo: 'estadio' })))
                 }
                 
                 // Buscar restaurantes
                 if (currentCategoria === 'todos' || currentCategoria === 'restaurantes') {
-                    let query = supabase.from('avaliacoes_restaurantes').select('*, usuarios:usuario_id(nome, email)')
-                    
+                    let data = await api.getRestaurantes({})
                     if (currentPais !== 'todos') {
-                        const cidades = cidadesPorPais[currentPais]
-                        query = query.in('cidade', cidades)
+                        data = data.filter(item => cidadesPorPais[currentPais].includes(item.cidade))
                     }
-                    
-                    if (termo) {
-                        query = query.or(`nome_estabelecimento.ilike.%${termo}%,cidade.ilike.%${termo}%,comentario.ilike.%${termo}%`)
-                    }
-                    
-                    const { data, error } = await query.order('data_avaliacao', { ascending: false }).limit(20)
-                    if (!error && data) {
-                        resultados.push(...data.map(r => ({ ...r, tipo: 'restaurante' })))
-                    }
+                    data = data.filter(item => bateComTermo(item, termo, ['nome_estabelecimento', 'tipo_comida']))
+                    resultados.push(...data.map(r => ({ ...r, tipo: 'restaurante' })))
                 }
                 
                 // Buscar transportes
                 if (currentCategoria === 'todos' || currentCategoria === 'transportes') {
-                    let query = supabase.from('avaliacoes_transportes').select('*, usuarios:usuario_id(nome, email)')
-                    
+                    let data = await api.getTransportes()
                     if (currentPais !== 'todos') {
-                        const cidades = cidadesPorPais[currentPais]
-                        query = query.in('cidade', cidades)
+                        data = data.filter(item => cidadesPorPais[currentPais].includes(item.cidade))
                     }
-                    
-                    if (termo) {
-                        query = query.or(`tipo_transporte.ilike.%${termo}%,cidade.ilike.%${termo}%,comentario.ilike.%${termo}%`)
-                    }
-                    
-                    const { data, error } = await query.order('data_avaliacao', { ascending: false }).limit(20)
-                    if (!error && data) {
-                        resultados.push(...data.map(r => ({ ...r, tipo: 'transporte' })))
-                    }
+                    data = data.filter(item => bateComTermo(item, termo, ['tipo_transporte', 'nome_linha']))
+                    resultados.push(...data.map(r => ({ ...r, tipo: 'transporte' })))
                 }
                 
                 // Ordenar por data
@@ -526,10 +510,11 @@
         
         // Atualizar UI de autenticação
         async function updateAuthUI() {
-            const user = await getCurrentUser()
             const authButtons = document.getElementById('auth-buttons')
             
-            if (user) {
+            try {
+                const resultado = await api.validarToken()
+                const user = resultado.user
                 const nome = user.user_metadata?.nome_completo || user.email?.split('@')[0] || 'Torcedor'
                 authButtons.innerHTML = `
                     <div class="flex items-center space-x-2 bg-white bg-opacity-20 rounded-full px-3 py-1">
@@ -537,7 +522,7 @@
                         <span class="text-sm font-semibold">${nome.split(' ')[0]}</span>
                     </div>
                 `
-            } else {
+            } catch (error) {
                 authButtons.innerHTML = `
                     <button onclick="window.location.href='login.html'" 
                             class="bg-white text-fifa-red px-4 py-1 rounded-full text-sm">

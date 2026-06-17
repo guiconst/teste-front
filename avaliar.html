@@ -256,9 +256,25 @@
 
     <div id="toast-container"></div>
 
-    <script>
+    <script type="module">
+        import { api } from './js/api.js'
+
+        // ========== ESTADO DAS NOTAS SELECIONADAS ==========
+        const notas = {
+            'nota-geral-estadio': 0,
+            'nota-seguranca-estadio': 0,
+            'nota-acesso-estadio': 0,
+            'nota-estrutura-estadio': 0,
+            'nota-qualidade-transporte': 0,
+            'nota-lotacao-transporte': 0,
+            'nota-espera-transporte': 0,
+            'nota-comida-restaurante': 0,
+            'nota-atendimento-restaurante': 0,
+            'nota-preco-restaurante': 0
+        }
+
         // ========== FUNÇÃO PARA GERAR ESTRELAS ==========
-        function gerarEstrelas(containerId, callback) {
+        function gerarEstrelas(containerId) {
             const container = document.getElementById(containerId)
             if (!container) {
                 console.log('Container não encontrado:', containerId)
@@ -277,7 +293,7 @@
                     })
                     btn.classList.add('selected', 'bg-yellow-400', 'text-white')
                     btn.classList.remove('bg-gray-100', 'text-gray-400')
-                    if (callback) callback(i)
+                    notas[containerId] = i
                 }
                 container.appendChild(btn)
             }
@@ -296,8 +312,6 @@
         
         // ========== FUNÇÃO PARA SELECIONAR TIPO DE AVALIAÇÃO ==========
         window.selecionarTipo = (tipo) => {
-            console.log('Selecionando tipo:', tipo)
-            
             // Esconder todos os formulários
             const formEstadio = document.getElementById('form-estadio')
             const formTransporte = document.getElementById('form-transporte')
@@ -321,18 +335,12 @@
             const btnTransporte = document.getElementById('btn-transporte')
             const btnRestaurante = document.getElementById('btn-restaurante')
             
-            if (btnEstadio) {
-                btnEstadio.classList.remove('active', 'border-fifa-red', 'bg-red-50', 'text-fifa-red')
-                btnEstadio.classList.add('border-gray-200', 'bg-white', 'text-gray-500')
-            }
-            if (btnTransporte) {
-                btnTransporte.classList.remove('active', 'border-fifa-red', 'bg-red-50', 'text-fifa-red')
-                btnTransporte.classList.add('border-gray-200', 'bg-white', 'text-gray-500')
-            }
-            if (btnRestaurante) {
-                btnRestaurante.classList.remove('active', 'border-fifa-red', 'bg-red-50', 'text-fifa-red')
-                btnRestaurante.classList.add('border-gray-200', 'bg-white', 'text-gray-500')
-            }
+            ;[btnEstadio, btnTransporte, btnRestaurante].forEach(btn => {
+                if (btn) {
+                    btn.classList.remove('active', 'border-fifa-red', 'bg-red-50', 'text-fifa-red')
+                    btn.classList.add('border-gray-200', 'bg-white', 'text-gray-500')
+                }
+            })
             
             // Ativar o botão clicado
             if (tipo === 'estadio' && btnEstadio) {
@@ -344,46 +352,119 @@
             }
         }
         
-        // ========== FUNÇÕES DE PUBLICAÇÃO (MOCK POR ENQUANTO) ==========
+        // ========== FUNÇÕES DE PUBLICAÇÃO (rotas reais do backend) ==========
         
-        window.publicarAvaliacaoEstadio = () => {
-            const nome = document.getElementById('estadio-nome').value
+        function exigirLogin() {
+            if (!localStorage.getItem('token')) {
+                showToast('Você precisa entrar para publicar uma avaliação!', 'error')
+                setTimeout(() => window.location.href = 'login.html', 1500)
+                return false
+            }
+            return true
+        }
+        
+        window.publicarAvaliacaoEstadio = async () => {
+            if (!exigirLogin()) return
+            
+            const estadio_nome = document.getElementById('estadio-nome').value
             const cidade = document.getElementById('estadio-cidade').value
             const comentario = document.getElementById('comentario-estadio').value
+            const nota_geral = notas['nota-geral-estadio']
+            const nota_seguranca = notas['nota-seguranca-estadio']
+            const nota_acesso = notas['nota-acesso-estadio']
+            const nota_estrutura = notas['nota-estrutura-estadio']
             
-            if (!nome || !cidade) {
+            if (!estadio_nome || !cidade) {
                 showToast('Preencha o nome do estádio e a cidade!', 'error')
                 return
             }
+            if (!nota_geral || !nota_seguranca || !nota_acesso || !nota_estrutura) {
+                showToast('Dê uma nota em todas as categorias!', 'error')
+                return
+            }
             
-            showToast('✅ Avaliação do estádio publicada com sucesso! 🏆', 'success')
-            setTimeout(() => window.location.href = 'index.html', 1500)
+            try {
+                await api.createAvaliacaoEstadio({
+                    estadio_nome, cidade, comentario,
+                    nota_geral, nota_seguranca, nota_acesso, nota_estrutura
+                })
+                showToast('✅ Avaliação do estádio publicada com sucesso! 🏆', 'success')
+                setTimeout(() => window.location.href = 'index.html', 1500)
+            } catch (error) {
+                showToast(error.message || 'Erro ao publicar avaliação', 'error')
+            }
         }
         
-        window.publicarAvaliacaoTransporte = () => {
-            const tipo = document.getElementById('transporte-tipo').value
-            const cidade = document.getElementById('transporte-cidade').value
+        window.publicarAvaliacaoTransporte = async () => {
+            if (!exigirLogin()) return
             
-            if (!tipo || !cidade) {
+            const tipo_transporte = document.getElementById('transporte-tipo').value
+            const cidade = document.getElementById('transporte-cidade').value
+            const nome_linha = document.getElementById('transporte-linha').value
+            const preco_estimado = document.getElementById('transporte-preco').value
+            const comentario = document.getElementById('comentario-transporte').value
+            const qualidade = notas['nota-qualidade-transporte']
+            const lotacao = notas['nota-lotacao-transporte']
+            const tempo_espera = notas['nota-espera-transporte']
+            
+            if (!tipo_transporte || !cidade) {
                 showToast('Preencha o tipo de transporte e a cidade!', 'error')
                 return
             }
             
-            showToast('✅ Avaliação do transporte publicada com sucesso! 🚇', 'success')
-            setTimeout(() => window.location.href = 'index.html', 1500)
+            try {
+                await api.createAvaliacaoTransporte({
+                    tipo_transporte, cidade, nome_linha, comentario,
+                    qualidade, lotacao, tempo_espera,
+                    preco_estimado: preco_estimado ? parseFloat(preco_estimado) : null
+                })
+                showToast('✅ Avaliação do transporte publicada com sucesso! 🚇', 'success')
+                setTimeout(() => window.location.href = 'index.html', 1500)
+            } catch (error) {
+                showToast(error.message || 'Erro ao publicar avaliação', 'error')
+            }
         }
         
-        window.publicarAvaliacaoRestaurante = () => {
-            const nome = document.getElementById('restaurante-nome').value
-            const cidade = document.getElementById('restaurante-cidade').value
+        window.publicarAvaliacaoRestaurante = async () => {
+            if (!exigirLogin()) return
             
-            if (!nome || !cidade) {
-                showToast('Preencha o nome do restaurante e a cidade!', 'error')
+            const nome_estabelecimento = document.getElementById('restaurante-nome').value
+            const cidade = document.getElementById('restaurante-cidade').value
+            const tipo_comida = document.getElementById('restaurante-tipo').value
+            const preco_medio = document.getElementById('restaurante-preco-medio').value
+            const comentario = document.getElementById('comentario-restaurante').value
+            const fotoInput = document.getElementById('restaurante-foto')
+            const nota_comida = notas['nota-comida-restaurante']
+            const nota_atendimento = notas['nota-atendimento-restaurante']
+            const nota_preco = notas['nota-preco-restaurante']
+            
+            if (!nome_estabelecimento || !cidade || !tipo_comida) {
+                showToast('Preencha o nome, a cidade e o tipo de comida!', 'error')
+                return
+            }
+            if (!nota_comida || !nota_atendimento || !nota_preco) {
+                showToast('Dê uma nota em todas as categorias!', 'error')
                 return
             }
             
-            showToast('✅ Avaliação do restaurante publicada com sucesso! 🍽️', 'success')
-            setTimeout(() => window.location.href = 'index.html', 1500)
+            const formData = new FormData()
+            formData.append('nome_estabelecimento', nome_estabelecimento)
+            formData.append('cidade', cidade)
+            formData.append('tipo_comida', tipo_comida)
+            formData.append('nota_comida', nota_comida)
+            formData.append('nota_atendimento', nota_atendimento)
+            formData.append('nota_preco', nota_preco)
+            if (preco_medio) formData.append('preco_medio', preco_medio)
+            if (comentario) formData.append('comentario', comentario)
+            if (fotoInput.files[0]) formData.append('foto', fotoInput.files[0])
+            
+            try {
+                await api.createAvaliacaoRestaurante(formData)
+                showToast('✅ Avaliação do restaurante publicada com sucesso! 🍽️', 'success')
+                setTimeout(() => window.location.href = 'index.html', 1500)
+            } catch (error) {
+                showToast(error.message || 'Erro ao publicar avaliação', 'error')
+            }
         }
         
         // ========== INICIALIZAÇÃO ==========
@@ -414,8 +495,6 @@
         if (btnEstadio) {
             btnEstadio.classList.add('active', 'border-fifa-red', 'bg-red-50', 'text-fifa-red')
         }
-        
-        console.log('Página inicializada!')
     </script>
 </body>
 </html>
